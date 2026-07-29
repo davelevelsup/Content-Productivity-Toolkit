@@ -226,7 +226,7 @@
   <div class="toolbar">
     <div class="tabs">
       <button class="tab" data-mat="blueprint" data-active="true">Weekly Blueprint</button>
-      <button class="tab" data-mat="release">Release Schedule</button>
+      <button class="tab" data-mat="release">Content Schedule</button>
     </div>
 
     <div class="palette-group">
@@ -301,29 +301,29 @@
   };
 
   const releaseData = {
-    title: "VIDEO RELEASE SCHEDULE",
-    meta: "VOD+ PUBLISHING LINEUP",
+    title: "CONTENT SCHEDULE",
+    meta: "VIDEO RELEASE LINEUP",
     columns: [
       { day:"MONDAY", icon:"gear", subtitle:"NO RELEASE", blocks:[
-        {label:"STATUS", body:"Editing continues — no drop today."}
+        {label:"STATUS", body:"Editing continues — no release today."}
       ]},
-      { day:"TUESDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
-        {label:"RELEASES", body:"Monday Stream VOD+ drops."}
+      { day:"TUESDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
+        {label:"RELEASES", body:"Monday Stream Video Release."}
       ]},
-      { day:"WEDNESDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
-        {label:"RELEASES", body:"Sunday Fuctory Tour VOD+ drops."}
+      { day:"WEDNESDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
+        {label:"RELEASES", body:"Sunday Fuctory Tour Video Release."}
       ]},
       { day:"THURSDAY", icon:"gear", subtitle:"NO RELEASE", blocks:[
-        {label:"STATUS", body:"Outreach & writing — no drop today."}
+        {label:"STATUS", body:"Outreach & writing — no release today."}
       ]},
-      { day:"FRIDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
-        {label:"RELEASES", body:"Wednesday Retro VOD+ drops."}
+      { day:"FRIDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
+        {label:"RELEASES", body:"Wednesday Retro Video Release."}
       ]},
-      { day:"SATURDAY", icon:"drop", subtitle:"TRUE EDIT DROP", blocks:[
-        {label:"RELEASES", body:"Wednesday Narrative Edit (True Edit) drops."}
+      { day:"SATURDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
+        {label:"RELEASES", body:"Wednesday Narrative Edit Video Release."}
       ]},
-      { day:"SUNDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
-        {label:"RELEASES", body:"Wednesday Mario Maker (or similar) VOD+ drops."}
+      { day:"SUNDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
+        {label:"RELEASES", body:"Wednesday Mario Maker (or similar) Video Release."}
       ]}
     ]
   };
@@ -346,10 +346,7 @@
   function renderMat(container, data){
     const colsHtml = data.columns.map(col => `
       <div class="daycol">
-        <div class="daycol__head">
-          <div class="daycol__icon">${ICONS[col.icon]}</div>
-          <div class="daycol__day" contenteditable="true" spellcheck="false">${col.day}</div>
-        </div>
+        <div class="daycol__day" contenteditable="true" spellcheck="false">${col.day}</div>
         <div class="daycol__subtitle" contenteditable="true" spellcheck="false">${col.subtitle}</div>
         <div class="daycol__blocks">
           ${col.blocks.map(blockHtml).join('')}
