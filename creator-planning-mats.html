@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Planning Mats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --void:#0a0a0c;
+    --panel:#111114;
+    --panel-raised:#17171b;
+    --red:#e21f2d;
+    --red-fill: rgba(226,31,45,.18);
+    --ash:#f3f1ee;
+    --mist:#9a969e;
+    --hairline: rgba(226,31,45,.45);
+    --glow: rgba(226,31,45,.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#1a1a1d;
+    color:var(--ash);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .app{ max-width:1680px; margin:0 auto; }
+  .app__header{ margin-bottom:18px; }
+  .app__header h1{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:20px;
+    margin:0 0 4px; letter-spacing:.02em;
+  }
+  .app__header p{ margin:0; font-size:13px; color:#9a97a0; }
+
+  .toolbar{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .tabs{ display:flex; gap:8px; }
+  .tab{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; letter-spacing:.04em;
+    text-transform:uppercase; background:#222226; color:var(--mist);
+    border:1px solid #2c2c31; border-radius:6px; padding:9px 16px; cursor:pointer;
+  }
+  .tab[data-active="true"]{ background:var(--red-fill); color:var(--ash); border-color:var(--red); }
+  .tab:focus-visible, .export-btn:focus-visible, .swatch:focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
+  .spacer{ flex:1; }
+
+  .palette-group{ display:flex; align-items:center; gap:8px; }
+  .palette-label{
+    font-family:'Rajdhani',sans-serif; font-size:12px; color:var(--mist);
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+  .swatches{ display:flex; gap:6px; }
+  .swatch{
+    width:22px; height:22px; border-radius:50%; border:2px solid #2c2c31;
+    cursor:pointer; padding:0;
+  }
+  .swatch[data-active="true"]{ border-color:#fff; }
+  #customColor{ width:34px; height:28px; border:none; background:none; padding:0; cursor:pointer; }
+
+  .export-btn{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; letter-spacing:.04em;
+    text-transform:uppercase; background:var(--red); color:#1a0507;
+    border:1px solid var(--red); border-radius:6px; padding:10px 18px; cursor:pointer;
+  }
+  .export-btn:hover{ filter:brightness(1.08); }
+  .export-btn:active{ transform:scale(.98); }
+
+  .mat-scale-wrapper{ position:relative; width:100%; overflow:hidden; }
+
+  .mat{
+    width:1600px; height:900px;
+    background:var(--void);
+    border:2px solid var(--red);
+    border-radius:6px;
+    position:absolute; top:0; left:0;
+    transform-origin: top left;
+    padding:28px 34px 24px;
+    display:flex; flex-direction:column;
+    font-family:'Rajdhani',sans-serif;
+    color:var(--ash);
+  }
+  .mat[data-hidden="true"]{ display:none; }
+
+  .corner{ position:absolute; width:26px; height:26px; pointer-events:none; }
+  .corner::before, .corner::after{ content:""; position:absolute; background:var(--red); }
+  .corner::before{ height:3px; width:100%; }
+  .corner::after{ width:3px; height:100%; }
+  .corner--tl{ top:12px; left:12px; }
+  .corner--tl::before{ top:0; left:0; } .corner--tl::after{ top:0; left:0; }
+  .corner--tr{ top:12px; right:12px; }
+  .corner--tr::before{ top:0; right:0; } .corner--tr::after{ top:0; right:0; }
+  .corner--bl{ bottom:12px; left:12px; }
+  .corner--bl::before{ bottom:0; left:0; } .corner--bl::after{ bottom:0; left:0; }
+  .corner--br{ bottom:12px; right:12px; }
+  .corner--br::before{ bottom:0; right:0; } .corner--br::after{ bottom:0; right:0; }
+
+  .top-tab{
+    position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(45deg);
+    width:16px; height:16px; background:var(--red);
+  }
+  .top-tab__line{ position:absolute; top:6px; height:2px; background:var(--hairline); width:140px; }
+  .top-tab__line--l{ right:calc(50% + 12px); }
+  .top-tab__line--r{ left:calc(50% + 12px); }
+
+  .mat__header{ position:relative; display:flex; flex-direction:column; align-items:center; padding-top:6px; }
+  .badge{
+    position:absolute; top:-6px; left:2px;
+    width:64px; height:64px; border-radius:50%;
+    border:3px solid var(--red); background:var(--panel);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .mat-title{
+    font-family:'Big Shoulders Stencil',sans-serif; font-weight:800; font-size:52px;
+    letter-spacing:.03em; color:var(--ash); text-align:center; margin:0;
+    text-shadow: 0 0 18px var(--glow);
+    outline:none;
+  }
+  .mat-meta{
+    position:absolute; top:2px; right:2px;
+    font-family:'Space Mono',monospace; font-size:12px; color:var(--mist);
+    text-align:right; outline:none;
+  }
+
+  .matgrid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:10px;
+    flex:1; min-height:0; margin-top:30px;
+  }
+  .daycol{
+    border:1.5px solid var(--hairline); border-radius:4px;
+    background:var(--panel);
+    display:flex; flex-direction:column;
+    padding:10px 9px;
+    min-height:0;
+  }
+  .daycol__head{ display:flex; align-items:center; gap:6px; justify-content:center; }
+  .daycol__icon{ width:16px; height:16px; flex:0 0 auto; }
+  .daycol__icon svg{ width:100%; height:100%; }
+  .daycol__day{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em;
+    color:var(--red); text-transform:uppercase; text-align:center; outline:none;
+  }
+  .daycol__subtitle{
+    font-size:10.5px; color:var(--mist); text-align:center; margin:4px 0 10px;
+    letter-spacing:.02em; line-height:1.3; outline:none;
+  }
+  .daycol__blocks{ display:flex; flex-direction:column; gap:7px; flex:1; min-height:0; }
+  .block{
+    border:1px solid var(--hairline); border-radius:3px; background:var(--panel-raised);
+    display:flex; flex-direction:column; flex:1; overflow:hidden; position:relative;
+  }
+  .block__remove{
+    position:absolute; top:2px; right:2px; width:15px; height:15px;
+    background:rgba(0,0,0,.45); color:var(--mist); border:none; border-radius:50%;
+    font-size:9px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center; z-index:2;
+  }
+  .block__remove:hover{ color:var(--red); background:rgba(0,0,0,.7); }
+  .block__label{
+    background:var(--red-fill); color:var(--red);
+    font-family:'Space Mono',monospace; font-size:9.5px; letter-spacing:.03em;
+    text-transform:uppercase; padding:4px 18px 4px 6px; text-align:center; outline:none;
+  }
+  .block__body{
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ash);
+    padding:6px 7px; line-height:1.35; outline:none;
+  }
+  [contenteditable="true"]:hover{ background:rgba(226,31,45,.08); }
+  [contenteditable="true"]:focus{ background:rgba(226,31,45,.12); box-shadow:0 0 0 1px var(--hairline); }
+
+  .daycol__addbtn{
+    margin-top:6px; width:100%; background:transparent; border:1px dashed var(--hairline);
+    color:var(--mist); font-family:'Rajdhani',sans-serif; font-size:10.5px; letter-spacing:.05em;
+    text-transform:uppercase; border-radius:3px; padding:5px 0; cursor:pointer; flex:0 0 auto;
+  }
+  .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
+
+  .mat.exporting .daycol__addbtn,
+  .mat.exporting .block__remove{ display:none !important; }
+
+  .icon-svg{ stroke:var(--red); fill:none; }
+  .hint{ font-size:12px; color:#8f8c94; margin-top:12px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="app__header">
+    <h1>Creator Planning Mats</h1>
+    <p>Click any text to edit it. Use + Add Box / the ✕ on a box to add or remove boxes. Pick a palette, then export.</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="tabs">
+      <button class="tab" data-mat="blueprint" data-active="true">Weekly Blueprint</button>
+      <button class="tab" data-mat="release">Release Schedule</button>
+    </div>
+
+    <div class="palette-group">
+      <span class="palette-label">Palette</span>
+      <div class="swatches" id="swatches"></div>
+      <input type="color" id="customColor" value="#e21f2d" aria-label="Custom accent color">
+    </div>
+
+    <div class="spacer"></div>
+    <button class="export-btn" id="exportBtn">Export PNG (16:9)</button>
+  </div>
+
+  <div class="mat-scale-wrapper" id="scaleWrapper">
+    <div class="mat" id="mat-blueprint" data-matname="creator-weekly-blueprint" data-hidden="false"></div>
+    <div class="mat" id="mat-release" data-matname="video-release-schedule" data-hidden="true"></div>
+  </div>
+
+  <p class="hint">Export renders a 1920×1080 PNG of the mat currently on screen.</p>
+</div>
+
+<script>
+  const ICONS = {
+    broadcast: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" fill="var(--red)"/><path d="M7 9a7 7 0 0 1 10 0M4.2 6.2a10.5 10.5 0 0 1 15.6 0" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    gear: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6"/></svg>`,
+    pencil: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg>`,
+    users: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.4" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="2.7"/><circle cx="16" cy="9.5" r="2.2"/><path d="M3 20c0-3 2.4-5.2 5.5-5.2S14 17 14 20M14 20c0-2.4 1.8-4.2 4-4.2s4 1.8 4 4.2"/></svg>`,
+    moon: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5z" fill="var(--red)" stroke="none"/></svg>`,
+    globe: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.4 2.4 2.4 13.6 0 16M12 4c-2.4 2.4-2.4 13.6 0 16"/></svg>`,
+    drop: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7 10l5 5 5-5M4 19h16"/></svg>`
+  };
+
+  const blueprintData = {
+    title: "CREATOR WEEKLY BLUEPRINT",
+    meta: "25-HR NON-STREAMING ALLOCATION",
+    columns: [
+      { day:"MONDAY", icon:"broadcast", subtitle:"6 HR STREAM (4PM) + PRE-GAME PREP", blocks:[
+        {label:"DAYTIME (1.5 HR)", body:"Stream setup, title/thumbnail finalization, and community check-ins."},
+        {label:"BLOCK 1 (2 HR)", body:"Minecraft All the Mons Apokélypse"},
+        {label:"BLOCK 2 (2 HR)", body:"Game Demo or Review Key"},
+        {label:"BLOCK 3 (2 HR)", body:"Vibe or Community Game"}
+      ]},
+      { day:"TUESDAY", icon:"gear", subtitle:"PROD, EDIT, ASSET & DEEP WORK — 9 HR TOTAL", blocks:[
+        {label:"BLOCK 1 (4 HR)", body:"Video Editing, VOD+ Pipeline & Vault Backlog Archiving"},
+        {label:"BLOCK 2 (3 HR)", body:"Asset Creation, Collab Planning"},
+        {label:"BLOCK 3 (2 HR)", body:"Flex Time"}
+      ]},
+      { day:"WEDNESDAY", icon:"broadcast", subtitle:"6 HR STREAM (5PM) + PRE-GAME PREP", blocks:[
+        {label:"DAYTIME (1.5 HR)", body:"Mid-week content review and stream board prep."},
+        {label:"BLOCK 1 (2 HR)", body:"Narrative Game"},
+        {label:"BLOCK 2 (2 HR)", body:"Mario Maker (or similar) — start with community levels"},
+        {label:"BLOCK 3 (2 HR)", body:"Retro Game"}
+      ]},
+      { day:"THURSDAY", icon:"pencil", subtitle:"CREATIVE DEV, WRITING & OUTREACH — 9 HR TOTAL", blocks:[
+        {label:"BLOCK 1 (4 HR)", body:"TTRPG System Design — The B.A.R.D. Files & Skald expansion worldbuilding"},
+        {label:"BLOCK 2 (3 HR)", body:"Flex"},
+        {label:"BLOCK 3 (2 HR)", body:"Creator outreach, community networking, and pipeline syncs"}
+      ]},
+      { day:"FRIDAY", icon:"users", subtitle:"DEEP FOCUS & GAME GREMLINS LIVE", blocks:[
+        {label:"DAYTIME (4 HR)", body:"Overflow editing for narrative game sessions and VOD polish before broadcast."},
+        {label:"START 7:00 PM CT — NO CAP", body:"Game Gremlins Live"},
+        {label:"BLOCK 1 (1 HR)", body:"Just Chatting"},
+        {label:"BLOCK 2 (1.5 HR)", body:"Daily Game Lineup (DLES)"},
+        {label:"BLOCK 3 (1.5+ HR)", body:"Tech News & Feature Game"}
+      ]},
+      { day:"SATURDAY", icon:"moon", subtitle:"OFF-AIR / HARD STOP", blocks:[
+        {label:"REST & RECOVERY", body:"Completely offline. Zero production, zero streaming."}
+      ]},
+      { day:"SUNDAY", icon:"globe", subtitle:"THE FUCTORY TOUR", blocks:[
+        {label:"START 7:00 PM CT (4+ HR)", body:"Community multiplayer and collaborative play."}
+      ]}
+    ]
+  };
+
+  const releaseData = {
+    title: "VIDEO RELEASE SCHEDULE",
+    meta: "VOD+ PUBLISHING LINEUP",
+    columns: [
+      { day:"MONDAY", icon:"gear", subtitle:"NO RELEASE", blocks:[
+        {label:"STATUS", body:"Editing continues — no drop today."}
+      ]},
+      { day:"TUESDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
+        {label:"RELEASES", body:"Monday Stream VOD+ drops."}
+      ]},
+      { day:"WEDNESDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
+        {label:"RELEASES", body:"Sunday Fuctory Tour VOD+ drops."}
+      ]},
+      { day:"THURSDAY", icon:"gear", subtitle:"NO RELEASE", blocks:[
+        {label:"STATUS", body:"Outreach & writing — no drop today."}
+      ]},
+      { day:"FRIDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
+        {label:"RELEASES", body:"Wednesday Retro VOD+ drops."}
+      ]},
+      { day:"SATURDAY", icon:"drop", subtitle:"TRUE EDIT DROP", blocks:[
+        {label:"RELEASES", body:"Wednesday Narrative Edit (True Edit) drops."}
+      ]},
+      { day:"SUNDAY", icon:"drop", subtitle:"VOD+ DROP", blocks:[
+        {label:"RELEASES", body:"Wednesday Mario Maker (or similar) VOD+ drops."}
+      ]}
+    ]
+  };
+
+  function blockHtml(b){
+    return `
+      <div class="block">
+        <button class="block__remove" title="Remove box">✕</button>
+        <div class="block__label" contenteditable="true" spellcheck="false">${b.label}</div>
+        <div class="block__body" contenteditable="true" spellcheck="false">${b.body}</div>
+      </div>
+    `;
+  }
+
+  function renderMat(container, data){
+    const colsHtml = data.columns.map(col => `
+      <div class="daycol">
+        <div class="daycol__head">
+          <div class="daycol__icon">${ICONS[col.icon]}</div>
+          <div class="daycol__day" contenteditable="true" spellcheck="false">${col.day}</div>
+        </div>
+        <div class="daycol__subtitle" contenteditable="true" spellcheck="false">${col.subtitle}</div>
+        <div class="daycol__blocks">
+          ${col.blocks.map(blockHtml).join('')}
+        </div>
+        <button class="daycol__addbtn">+ Add Box</button>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="corner corner--tl"></div>
+      <div class="corner corner--tr"></div>
+      <div class="corner corner--bl"></div>
+      <div class="corner corner--br"></div>
+      <div class="top-tab"></div>
+      <div class="top-tab__line top-tab__line--l"></div>
+      <div class="top-tab__line top-tab__line--r"></div>
+
+      <div class="mat__header">
+        <div class="badge">
+          <svg width="30" height="30" viewBox="0 0 24 24" class="icon-svg" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20V6M12 6l-5 5M12 6l5 5"/>
+          </svg>
+        </div>
+        <div class="mat-meta" contenteditable="true" spellcheck="false">${data.meta}</div>
+        <h2 class="mat-title" contenteditable="true" spellcheck="false">${data.title}</h2>
+      </div>
+
+      <div class="matgrid">${colsHtml}</div>
+    `;
+  }
+
+  const matBlueprint = document.getElementById('mat-blueprint');
+  const matRelease = document.getElementById('mat-release');
+  renderMat(matBlueprint, blueprintData);
+  renderMat(matRelease, releaseData);
+
+  // ---------- add / remove boxes (event delegation) ----------
+  document.getElementById('scaleWrapper').addEventListener('click', (e) => {
+    if (e.target.classList.contains('block__remove')){
+      e.target.closest('.block').remove();
+    } else if (e.target.classList.contains('daycol__addbtn')){
+      const blocksWrap = e.target.previousElementSibling;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = blockHtml({label:'NEW BOX', body:'Click to edit'});
+      blocksWrap.appendChild(wrapper.firstElementChild);
+    }
+  });
+
+  // ---------- tab switching ----------
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.dataset.active = 'false');
+      tab.dataset.active = 'true';
+      const target = tab.dataset.mat;
+      matBlueprint.dataset.hidden = target === 'blueprint' ? 'false' : 'true';
+      matRelease.dataset.hidden = target === 'release' ? 'false' : 'true';
+      fitScale();
+    });
+  });
+
+  // ---------- scale-to-fit ----------
+  const scaleWrapper = document.getElementById('scaleWrapper');
+  function activeMat(){
+    return matBlueprint.dataset.hidden === 'false' ? matBlueprint : matRelease;
+  }
+  function fitScale(){
+    const mat = activeMat();
+    const wrapperWidth = scaleWrapper.clientWidth || 1600;
+    const scale = Math.min(1, wrapperWidth / 1600);
+    mat.style.transform = `scale(${scale})`;
+    scaleWrapper.style.height = (900 * scale) + 'px';
+  }
+  window.addEventListener('resize', fitScale);
+  fitScale();
+
+  // ---------- palette ----------
+  const PRESETS = [
+    { name:'Crimson', hex:'#e21f2d' },
+    { name:'Cyan',    hex:'#1fd0e2' },
+    { name:'Violet',  hex:'#a239f2' },
+    { name:'Amber',   hex:'#f2a71f' },
+    { name:'Emerald', hex:'#1fe27a' },
+    { name:'Mono',    hex:'#d8d5da' }
+  ];
+  const swatchesEl = document.getElementById('swatches');
+  const customColorEl = document.getElementById('customColor');
+
+  function hexToRgb(hex){
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+    const num = parseInt(hex, 16);
+    return [ (num>>16)&255, (num>>8)&255, num&255 ];
+  }
+
+  function applyPalette(hex, fromSwatch){
+    const [r,g,b] = hexToRgb(hex);
+    const root = document.documentElement.style;
+    root.setProperty('--red', hex);
+    root.setProperty('--red-fill', `rgba(${r},${g},${b},0.18)`);
+    root.setProperty('--hairline', `rgba(${r},${g},${b},0.45)`);
+    root.setProperty('--glow', `rgba(${r},${g},${b},0.45)`);
+    customColorEl.value = hex;
+    document.querySelectorAll('.swatch').forEach(s => {
+      s.dataset.active = (fromSwatch && s.dataset.hex === hex) ? 'true' : 'false';
+    });
+  }
+
+  PRESETS.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'swatch';
+    btn.style.background = p.hex;
+    btn.dataset.hex = p.hex;
+    btn.title = p.name;
+    btn.dataset.active = i === 0 ? 'true' : 'false';
+    btn.addEventListener('click', () => applyPalette(p.hex, true));
+    swatchesEl.appendChild(btn);
+  });
+
+  customColorEl.addEventListener('input', (e) => applyPalette(e.target.value, false));
+
+  // ---------- export ----------
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    const mat = activeMat();
+    const prevTransform = mat.style.transform;
+    mat.style.transform = 'none';
+    mat.classList.add('exporting');
+    await new Promise(r => requestAnimationFrame(r));
+    try{
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const canvas = await html2canvas(mat, { backgroundColor:'#0a0a0c', scale:1.2, useCORS:true });
+      const link = document.createElement('a');
+      link.download = (mat.dataset.matname || 'planning-mat') + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }catch(e){
+      alert('Export failed — as a fallback, you can take a screenshot of the mat. (' + e.message + ')');
+    }finally{
+      mat.classList.remove('exporting');
+      mat.style.transform = prevTransform;
+      fitScale();
+    }
+  });
+</script>
+</body>
+</html>
