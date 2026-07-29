@@ -168,29 +168,30 @@
 
   /* ---------- Sticky note ---------- */
   .sticky-card{
-    background:#fff8dc; color:#2a2410; border-radius:4px;
+    background:var(--panel-raised); color:var(--ash); border-radius:4px;
     padding:18px 16px 16px; height:100%; min-height:200px;
     display:flex; flex-direction:column;
-    box-shadow:0 10px 18px -8px rgba(0,0,0,.5);
+    box-shadow:0 10px 18px -8px rgba(0,0,0,.6);
+    border:1px solid var(--hairline);
     position:relative; transform:rotate(-1deg);
   }
   .sticky-card::before{
     content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%);
     width:14px; height:14px; border-radius:50%; background:var(--red);
-    box-shadow:0 2px 4px rgba(0,0,0,.4);
+    box-shadow:0 2px 4px rgba(0,0,0,.5);
   }
   .sticky-card__title{
     font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; letter-spacing:.04em;
     text-transform:uppercase; background:transparent; border:none;
-    border-bottom:1px dashed rgba(0,0,0,.25); color:#2a2410; padding:2px 0 6px; margin-bottom:8px; width:100%;
+    border-bottom:1px dashed var(--hairline); color:var(--red); padding:2px 0 6px; margin-bottom:8px; width:100%;
   }
-  .sticky-card__title:focus{ outline:none; border-bottom-color:#2a2410; }
+  .sticky-card__title:focus{ outline:none; border-bottom-color:var(--red); }
   .sticky-card__body{
     background:transparent; border:none; resize:none; flex:1;
-    font-family:'Inter',sans-serif; font-size:13px; color:#3a3115; padding:0; line-height:1.5;
+    font-family:'Inter',sans-serif; font-size:13px; color:var(--ash); padding:0; line-height:1.5;
   }
   .sticky-card__body:focus{ outline:none; }
-  .sticky-card__body::placeholder{ color:#8a7e4f; }
+  .sticky-card__body::placeholder{ color:var(--mist); }
 
   /* ---------- Stream timeline ---------- */
   .streambay{ display:flex; flex-direction:column; gap:20px; }
