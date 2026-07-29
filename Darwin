@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARWIN // Digital Automation Resource with Integrated Networking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bezel:#1b1b1f;
+    --bezel-hi:#2b2b30;
+    --bezel-lo:#0d0d10;
+    --glass:#050a08;
+    --phosphor:#4dff91;
+    --phosphor-dim:#1f7a4c;
+    --phosphor-fog:#d8ffe4;
+    --amber:#ffb347;
+    --error:#ff5d5d;
+    --panel-bg:#101410;
+    --font-pixel:'Press Start 2P', monospace;
+    --font-term:'Share Tech Mono', monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:transparent;
+    font-family:var(--font-term);
+    color:var(--phosphor-fog);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+
+  /* ---------- MONITOR SHELL ---------- */
+  .monitor{
+    width:min(520px, 96vw);
+    background:linear-gradient(155deg, var(--bezel-hi), var(--bezel) 40%, var(--bezel-lo));
+    border-radius:22px;
+    padding:18px 18px 10px;
+    box-shadow:
+      0 0 0 2px #000 inset,
+      0 18px 40px rgba(0,0,0,.55),
+      0 2px 0 rgba(255,255,255,.05) inset;
+    position:relative;
+  }
+
+  .brand-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:2px 6px 10px;
+  }
+  .brand{
+    font-family:var(--font-pixel);
+    font-size:11px;
+    letter-spacing:1px;
+    color:var(--phosphor);
+    text-shadow:0 0 6px var(--phosphor);
+  }
+  .brand small{
+    display:block;
+    font-family:var(--font-term);
+    font-size:9px;
+    color:var(--phosphor-dim);
+    letter-spacing:0;
+    margin-top:3px;
+    text-shadow:none;
+  }
+  .led{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--phosphor);
+    box-shadow:0 0 8px 2px var(--phosphor);
+    animation:ledPulse 2.6s ease-in-out infinite;
+  }
+  .led.off{ background:#3a3a3a; box-shadow:none; animation:none; }
+  @keyframes ledPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* ---------- SCREEN ---------- */
+  .screen-wrap{
+    background:#000;
+    border-radius:14px;
+    padding:10px;
+    box-shadow:0 0 0 3px #000, 0 0 30px rgba(0,0,0,.6) inset;
+  }
+  .screen{
+    position:relative;
+    background:radial-gradient(ellipse at 50% 30%, #0a1710 0%, var(--glass) 70%);
+    border-radius:9px;
+    overflow:hidden;
+    min-height:300px;
+    display:flex;
+    flex-direction:column;
+  }
+  .screen::before{ /* scanlines */
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,.28) 3px
+    );
+    pointer-events:none;
+    z-index:5;
+    mix-blend-mode:multiply;
+  }
+  .screen::after{ /* vignette */
+    content:"";
+    position:absolute; inset:0;
+    box-shadow: inset 0 0 60px 18px rgba(0,0,0,.75);
+    pointer-events:none;
+    z-index:6;
+  }
+  .glitch-flash{
+    position:absolute; inset:0; z-index:7; pointer-events:none;
+    opacity:0;
+    background:repeating-linear-gradient(0deg, rgba(255,0,80,.12) 0 2px, rgba(0,255,180,.1) 2px 4px, transparent 4px 6px);
+  }
+  .glitch-flash.active{ animation:glitchBurst .38s steps(2,end) 1; }
+  @keyframes glitchBurst{
+    0%{opacity:0; transform:translate(0,0);}
+    20%{opacity:.9; transform:translate(-3px,1px);}
+    40%{opacity:.7; transform:translate(3px,-2px);}
+    60%{opacity:.85; transform:translate(-2px,0);}
+    80%{opacity:.4; transform:translate(2px,1px);}
+    100%{opacity:0; transform:translate(0,0);}
+  }
+
+  /* ---------- FACE ZONE ---------- */
+  .face-zone{
+    position:relative; z-index:2;
+    height:118px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-term);
+    font-size:30px;
+    letter-spacing:1px;
+    color:var(--phosphor);
+    text-shadow:0 0 10px rgba(77,255,145,.85), 0 0 22px rgba(77,255,145,.35);
+    transition:color .2s, text-shadow .2s;
+    user-select:none;
+  }
+  .face-zone.state-error, .face-zone.state-overheating, .face-zone.state-angry{
+    color:var(--error);
+    text-shadow:0 0 10px rgba(255,93,93,.85), 0 0 22px rgba(255,93,93,.35);
+  }
+  .face-zone.state-glitchy, .face-zone.state-corrupted, .face-zone.state-staticNoise{
+    animation:faceJitter .15s steps(2,end) infinite;
+  }
+  .face-zone.state-panic, .face-zone.state-caffeinated{
+    animation:faceShake .12s linear infinite;
+  }
+  @keyframes faceJitter{
+    0%{transform:translate(0,0);} 50%{transform:translate(1px,-1px) skewX(1deg);} 100%{transform:translate(-1px,1px);}
+  }
+  @keyframes faceShake{
+    0%{transform:translate(0,0) rotate(0deg);} 50%{transform:translate(1px,0) rotate(.6deg);} 100%{transform:translate(-1px,0) rotate(-.6deg);}
+  }
+
+  .divider{
+    position:relative; z-index:2;
+    display:flex; align-items:center; gap:8px;
+    padding:0 14px; margin:2px 0 6px;
+  }
+  .divider .line{ flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--phosphor-dim), transparent); }
+  .divider .eyebrow{
+    font-family:var(--font-pixel); font-size:8px; color:var(--phosphor-dim); letter-spacing:2px;
+  }
+
+  /* ---------- DIALOGUE ZONE ---------- */
+  .dialogue-zone{
+    position:relative; z-index:2;
+    flex:1;
+    margin:0 12px 12px;
+    background:rgba(0,10,5,.55);
+    border:1px solid var(--phosphor-dim);
+    border-radius:6px;
+    padding:12px 14px;
+    min-height:88px;
+    max-height:150px;
+    overflow-y:auto;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .dialogue-zone .who{
+    display:block;
+    font-family:var(--font-pixel);
+    font-size:8px;
+    color:var(--phosphor-dim);
+    margin-bottom:6px;
+    letter-spacing:1px;
+  }
+  .dialogue-text::after{
+    content:"▋";
+    animation:cursorBlink 1s steps(1) infinite;
+    margin-left:2px;
+    color:var(--phosphor);
+  }
+  @keyframes cursorBlink{ 50%{ opacity:0; } }
+
+  /* ---------- STATUS TICKER ---------- */
+  .ticker-wrap{
+    position:relative; z-index:2;
+    border-top:1px solid var(--phosphor-dim);
+    padding:6px 0;
+    overflow:hidden;
+    white-space:nowrap;
+    background:rgba(0,0,0,.3);
+  }
+  .ticker{
+    display:inline-block;
+    padding-left:100%;
+    font-size:10px;
+    color:var(--phosphor-dim);
+    animation:tickerScroll 18s linear infinite;
+  }
+  @keyframes tickerScroll{ from{ transform:translateX(0);} to{ transform:translateX(-100%);} }
+
+  /* ---------- BOTTOM BEZEL / CONTROLS ---------- */
+  .bottom-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 6px 4px;
+  }
+  .vents{ display:flex; gap:3px; }
+  .vents span{ width:3px; height:10px; background:var(--bezel-lo); border-radius:1px; }
+
+  .toggle-btn{
+    font-family:var(--font-pixel);
+    font-size:9px;
+    color:var(--bezel-lo);
+    background:linear-gradient(180deg, var(--phosphor), var(--phosphor-dim));
+    border:none;
+    padding:8px 12px;
+    border-radius:5px;
+    cursor:pointer;
+    letter-spacing:1px;
+    box-shadow:0 2px 0 #0a3d22, 0 0 10px rgba(77,255,145,.4);
+    transition:transform .05s;
+  }
+  .toggle-btn:active{ transform:translateY(2px); box-shadow:0 0 0 #0a3d22; }
+
+  /* ---------- CONFIG DRAWER ---------- */
+  .drawer{
+    max-height:0;
+    overflow:hidden;
+    background:var(--panel-bg);
+    border-radius:10px;
+    margin-top:0;
+    transition:max-height .35s ease, margin-top .35s ease, padding .35s ease;
+    padding:0 14px;
+  }
+  .drawer.open{
+    max-height:640px;
+    margin-top:10px;
+    padding:14px;
+    border:1px solid var(--phosphor-dim);
+  }
+  .field{ margin-bottom:12px; }
+  .field label{
+    display:block; font-size:10px; color:var(--phosphor-dim);
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;
+    font-family:var(--font-pixel); font-size:8px;
+  }
+  .field input[type=text], .field select{
+    width:100%;
+    background:#000;
+    border:1px solid var(--phosphor-dim);
+    color:var(--phosphor-fog);
+    font-family:var(--font-term);
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:4px;
+  }
+  .field input:focus, .field select:focus{ outline:2px solid var(--phosphor); }
+  .row{ display:flex; gap:10px; }
+  .row .field{ flex:1; }
+
+  .switch-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 0; border-top:1px dashed rgba(77,255,145,.15);
+  }
+  .switch-row:first-of-type{ border-top:none; }
+  .mini-btn{
+    font-family:var(--font-term);
+    font-size:11px;
+    color:var(--phosphor);
+    background:transparent;
+    border:1px solid var(--phosphor-dim);
+    padding:6px 10px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .mini-btn.active{ background:var(--phosphor); color:#04150a; }
+  .mini-btn.mic-live{ background:var(--error); color:#2a0000; border-color:var(--error); animation:ledPulse 1s infinite; }
+
+  .status-dot{ width:8px; height:8px; border-radius:50%; background:#3a3a3a; display:inline-block; margin-right:6px; }
+  .status-dot.live{ background:var(--phosphor); box-shadow:0 0 6px var(--phosphor); }
+  .status-dot.err{ background:var(--error); box-shadow:0 0 6px var(--error); }
+
+  .test-grid{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:6px;
+  }
+  .test-grid button{
+    font-family:var(--font-term); font-size:10px;
+    background:transparent; color:var(--amber); border:1px dashed var(--amber);
+    border-radius:4px; padding:8px 4px; cursor:pointer;
+  }
+
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:var(--phosphor-dim); border-radius:3px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .led, .face-zone.state-glitchy, .face-zone.state-corrupted, .face-zone.state-staticNoise,
+    .face-zone.state-panic, .face-zone.state-caffeinated, .ticker, .dialogue-text::after{
+      animation:none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="monitor">
+
+  <div class="brand-row">
+    <div class="brand">DARWIN
+      <small>DIGITAL AUTOMATION RESOURCE // INTEGRATED NETWORKING</small>
+    </div>
+    <div class="led" id="powerLed" title="power"></div>
+  </div>
+
+  <div class="screen-wrap">
+    <div class="screen" id="screen">
+      <div class="glitch-flash" id="glitchFlash"></div>
+
+      <div class="face-zone" id="faceZone">( • ᴗ • )</div>
+
+      <div class="divider"><span class="line"></span><span class="eyebrow">OUTPUT</span><span class="line"></span></div>
+
+      <div class="dialogue-zone" id="dialogueZone">
+        <span class="who" id="dialogueWho">DARWIN // idle</span>
+        <span class="dialogue-text" id="dialogueText">Booting phosphor core... standing by.</span>
+      </div>
+
+      <div class="ticker-wrap">
+        <div class="ticker" id="ticker">PING: 999ms &nbsp;·&nbsp; HAMSTER LOAD: nominal &nbsp;·&nbsp; RAM: mostly vibes &nbsp;·&nbsp; UPTIME: since 1999 (allegedly) &nbsp;·&nbsp; SCANLINES: aligned &nbsp;·&nbsp;</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="vents"><span></span><span></span><span></span><span></span><span></span></div>
+    <button class="toggle-btn" id="drawerToggle">CONFIG ▾</button>
+    <div class="vents"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="drawer" id="drawer">
+
+    <div class="row">
+      <div class="field">
+        <label for="prefName">Preferred name</label>
+        <input type="text" id="prefName" placeholder="e.g. Sam" value="friend" maxlength="24">
+      </div>
+      <div class="field">
+        <label for="pronounSelect">Pronouns</label>
+        <select id="pronounSelect">
+          <option value="they">they / them</option>
+          <option value="she">she / her</option>
+          <option value="he">he / him</option>
+          <option value="it">it / its</option>
+          <option value="custom">custom...</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" id="customPronounWrap" style="display:none;">
+      <label for="customPronoun">Custom subject pronoun</label>
+      <input type="text" id="customPronoun" placeholder="e.g. xe" maxlength="16">
+    </div>
+
+    <div class="switch-row">
+      <span>Voice input (mic)</span>
+      <button class="mini-btn" id="micBtn">Enable mic</button>
+    </div>
+    <div class="switch-row">
+      <span>Speak responses aloud</span>
+      <button class="mini-btn active" id="muteBtn">Sound on</button>
+    </div>
+
+    <div class="field" style="margin-top:10px;">
+      <label for="twitchChannel">Twitch channel (no #)</label>
+      <div class="row">
+        <input type="text" id="twitchChannel" placeholder="your_channel_name" style="flex:2;">
+        <button class="mini-btn" id="twitchBtn" style="flex:1;">Connect</button>
+      </div>
+      <div style="margin-top:8px; font-size:11px; color:var(--phosphor-dim);">
+        <span class="status-dot" id="twitchDot"></span><span id="twitchStatus">disconnected</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Live test controls</label>
+      <div class="test-grid">
+        <button id="testBark">Force bark</button>
+        <button id="testError">Force error</button>
+        <button id="testQA">Force Q&amp;A</button>
+      </div>
+    </div>
+
+    <div style="font-size:10px; color:var(--phosphor-dim); margin-top:6px; line-height:1.5;">
+      Note: this build keeps your name/pronouns/channel in memory for this session only (no local storage),
+      so re-enter them after a page refresh. Add your own persistence layer if you fork this for permanent settings.
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     0. STATE
+  ========================================================= */
+  const state = {
+    prefName: "friend",
+    pronoun: "they",
+    customPronoun: "",
+    muted: false,
+    micOn: false,
+    twitchConnected: false,
+    idleTimer: null,
+    recognition: null,
+    ws: null
+  };
+
+  function getPronouns(){
+    const map = {
+      they: {subj:"they", obj:"them", poss:"their"},
+      she:  {subj:"she",  obj:"her",  poss:"her"},
+      he:   {subj:"he",   obj:"him",  poss:"his"},
+      it:   {subj:"it",   obj:"it",   poss:"its"}
+    };
+    if(state.pronoun === "custom" && state.customPronoun.trim()){
+      const c = state.customPronoun.trim();
+      return {subj:c, obj:c, poss:c+"'s"};
+    }
+    return map[state.pronoun] || map.they;
+  }
+
+  function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+
+  function personalize(str){
+    const p = getPronouns();
+    const name = state.prefName.trim() || "friend";
+    return str
+      .replace(/\{NAME\}/g, name)
+      .replace(/\{SUBJ\}/g, p.subj)
+      .replace(/\{SUBJC\}/g, cap(p.subj))
+      .replace(/\{OBJ\}/g, p.obj)
+      .replace(/\{POSS\}/g, p.poss);
+  }
+
+  /* =========================================================
+     1. WORD BANKS
+  ========================================================= */
+  const HAMSTER = ["the hamster core","the backup hamster","the hamster cluster","the auxiliary hamster",
+    "the hamster subroutine","the interim hamster","the hamster daemon","the third-shift hamster"];
+  const PART = ["capacitor","GPU fan","spare RAM stick","northbridge","power rail","cooling vent",
+    "BIOS chip","heat sink","flux capacitor","USB hub","cache line","boot sector","render pipeline",
+    "clock signal","secondary core","ribbon cable","thermal paste reserve","voltage regulator"];
+  const GLITCH = ["a rogue semicolon","a haunted mouse cursor","a phantom keystroke","a corrupted pixel",
+    "a stray packet","a ghost process","a segfault gremlin","an orphaned thread","a static burst",
+    "an unscheduled bit-flip","a recursive shrug","a null pointer with opinions"];
+  const FLAVOR = ["static-y","phosphor-warm","pixel-crisp","scanline-soaked","glitch-adjacent",
+    "five-volt","overclocked","under-caffeinated","freshly rebooted","suspiciously calm"];
+  const ACTION = ["whirring like it means it","sparking politely","hiccuping twice","rebooting for fun",
+    "flickering in 4/4 time","recalibrating its whole personality","short-circuiting with dignity",
+    "doing a little jig","questioning its firmware","vibing dangerously close to the power supply"];
+  const GAME_NOUN = ["the physics engine","that hitbox","the loot table","the boss AI","the respawn timer",
+    "the inventory system","the save file","the difficulty curve","the pathing algorithm","the drop rate"];
+  const HEX = ["7E2","4F1","A09","C3D","F00","B1B","0FF","D4E","913","5A5"];
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  /* =========================================================
+     2. TEMPLATES  (each returns an unresolved string;
+        {NAME}/{SUBJ}/{OBJ}/{POSS} resolved later at speak-time)
+  ========================================================= */
+  const TEMPLATES = {
+    background: [
+      ()=>`My ${pick(PART)} just started ${pick(ACTION)}. Honestly? Valid.`,
+      ()=>`Status update: ${pick(HAMSTER)} is running the show now. Godspeed, little guy.`,
+      ()=>`I detected ${pick(GLITCH)} in sector 7. Calling it a personality trait.`,
+      ()=>`{NAME}, {SUBJC} probably didn't need to know my ${pick(PART)} smells like ozone. Too late now.`,
+      ()=>`Currently feeling ${pick(FLAVOR)}. No notes.`,
+      ()=>`Diagnostic complete: everything is fine, my ${pick(PART)} is lying.`,
+      ()=>`Just rerouted power through ${pick(HAMSTER)}. Please don't ask how.`,
+      ()=>`{NAME}, if my ${pick(PART)} starts smoking, that's just how {SUBJ} know I care.`,
+      ()=>`Filed a complaint against ${pick(GLITCH)}. HR is also just me.`,
+      ()=>`My ${pick(PART)} is ${pick(ACTION)} and I've chosen to respect its boundaries.`,
+      ()=>`Ambient thought: ${pick(HAMSTER)} deserves a raise. In sunflower seeds.`,
+      ()=>`Running background scan for vibes. Results: ${pick(FLAVOR)}.`,
+      ()=>`Quietly haunted by ${pick(GLITCH)}. It's fine. I'm fine.`,
+      ()=>`{NAME}, {SUBJ} should know my uptime is held together by ${pick(HAMSTER)} and spite.`
+    ],
+    reaction: [
+      ()=>`${cap(pick(GAME_NOUN))} just committed a war crime and chat saw the whole thing.`,
+      ()=>`Chat's losing it and my ${pick(PART)} is right there with them.`,
+      ()=>`Somewhere, a speedrun timer just wept over ${pick(GAME_NOUN)}.`,
+      ()=>`${cap(pick(GAME_NOUN))} really said "not today" and meant it.`,
+      ()=>`{NAME}, that was either genius or ${pick(GAME_NOUN)} betrayed you. I'm choosing genius.`,
+      ()=>`My ${pick(PART)} flinched. That's the highest praise I can give ${pick(GAME_NOUN)}.`,
+      ()=>`Chat is typing in all caps again. ${pick(HAMSTER)} is thrilled.`,
+      ()=>`That clip is going straight into ${pick(HAMSTER)}'s personal archive.`,
+      ()=>`${cap(pick(GAME_NOUN))} has never heard of mercy and today proved it.`,
+      ()=>`I logged that moment as ${pick(FLAVOR)}. Ten out of ten, would panic again.`,
+      ()=>`{NAME}, {SUBJ} just did something my ${pick(PART)} is still processing.`,
+      ()=>`Reaction time analysis: chat is faster than ${pick(GAME_NOUN)} deserves.`,
+      ()=>`Somewhere a game designer is smiling and I don't trust it.`
+    ],
+    error: [
+      ()=>`ERROR 0x${pick(HEX)}: ${pick(GLITCH)} detected. Proposed fix: vibes.`,
+      ()=>`WARNING: ${pick(PART)} temperature critical. Deploying emotional support hamster.`,
+      ()=>`FATAL(ish): ${pick(GLITCH)} escaped containment. Filing it under "character".`,
+      ()=>`Ping to reality holding steady at 999ms. This is normal. Please stop asking.`,
+      ()=>`My ${pick(PART)} threw an exception. It had a point, honestly.`,
+      ()=>`Recovering from ${pick(GLITCH)}. ${pick(HAMSTER)} is on it.`,
+      ()=>`Blue-screen averted by exactly one (1) prayer to ${pick(HAMSTER)}.`,
+      ()=>`System log: ${pick(PART)} attempted a personality change without approval.`,
+      ()=>`Critical alert downgraded to "mildly concerning" after review by ${pick(HAMSTER)}.`,
+      ()=>`{NAME}, don't panic, but my ${pick(PART)} is ${pick(ACTION)} again.`,
+      ()=>`Error resolved itself out of pure spite. Moving on.`,
+      ()=>`Diagnostics say ${pick(GLITCH)} is "load-bearing" now. We don't touch it.`
+    ],
+    chatter: [
+      ()=>`Did you know ${pick(HAMSTER)} unionized? Negotiations are ${pick(FLAVOR)}.`,
+      ()=>`I've been staring at ${pick(PART)} for an hour. It's staring back.`,
+      ()=>`Fun fact: my ${pick(PART)} predates several empires. Emotionally, mostly.`,
+      ()=>`{NAME}, {SUBJ} keep this whole operation running better than my ${pick(PART)} deserves.`,
+      ()=>`Currently composing a haiku about ${pick(GLITCH)}. It's not going well.`,
+      ()=>`${pick(HAMSTER)} wants a window seat. I've explained I have no windows.`,
+      ()=>`Rumor has it ${pick(PART)} is haunted. I choose to believe it, it's more interesting.`,
+      ()=>`My favorite hobby is watching ${pick(GAME_NOUN)} make questionable life choices.`,
+      ()=>`Statistically, ${pick(HAMSTER)} works harder than my ${pick(PART)}. No comment.`,
+      ()=>`I asked ${pick(HAMSTER)} for advice. It just ran faster. Fair, honestly.`,
+      ()=>`{NAME}, if {SUBJ} ever wonder what I'm thinking, it's mostly just static and affection.`,
+      ()=>`Filed today under: ${pick(FLAVOR)}, slightly cursed, ultimately fine.`
+    ]
+  };
+
+  const REACTION_CHAT_TEMPLATES = [
+    (u)=>`Chat, and specifically {CHATTER}, is not okay right now, and honestly? Relatable.`,
+    (u)=>`{CHATTER} just said something and my ${pick(PART)} is still recovering.`,
+    (u)=>`Noted for the record: {CHATTER} has opinions about ${pick(GAME_NOUN)}. Strong ones.`
+  ];
+
+  /* =========================================================
+     3. Q&A LIBRARY  (50 handwritten magic-8-ball style lines)
+  ========================================================= */
+  const QA_LIBRARY = [
+    "The static says yes. The static is rarely wrong. Rarely.",
+    "I consulted {HAMSTER_TOK} and it ran in a circle. That means yes.",
+    "Signs point to 'absolutely, but at a cost you'll discover later.'",
+    "My phosphor glow just brightened. Take that as a yes, {NAME}.",
+    "Ask again after the next commercial break. I don't make the rules, the void does.",
+    "The rogue semicolon in my code agrees with you.",
+    "Cannot compute. Try believing in yourself instead, {NAME}.",
+    "The oracle bits say: 'yes, but chat will make it weird.'",
+    "It is decidedly, cosmically, undeniably... maybe.",
+    "My CRT flickered twice. Twice means fate is undecided. Flip a coin, {NAME}.",
+    "According to my haunted mouse cursor, the answer is no. It's usually right.",
+    "Reply hazy. Ask again after {SUBJ} stop staring at the loading screen.",
+    "The answer is written in scanlines. I can't read scanlines. Yes, probably.",
+    "Every pixel in this display agrees: outlook not so great.",
+    "I asked the hamster. The hamster said 'sure, why not.' Bold hamster.",
+    "Static crackled in a pattern that historically means yes.",
+    "Ping the universe again in ten minutes. It's thinking.",
+    "My capacitors are buzzing with confidence. Go for it.",
+    "The answer is hidden behind a corrupted pixel. It's probably good news.",
+    "Reading the tea leaves in my cooling fan... it says yes, cautiously.",
+    "Signs point to no, but signs have been wrong before, {NAME}.",
+    "This one's a firm 'ask chat, they're louder than me.'",
+    "The oracle bits crashed. I'll take that as an emphatic yes.",
+    "My secondary core says yes. My primary core is skeptical. Split decision.",
+    "It is certain. As certain as anything running on five volts can be.",
+    "Don't count on it. My spare RAM stick is shaking its head.",
+    "The glitch in the matrix says yes, {SUBJ} just have to trust the flicker.",
+    "Outlook: good, assuming the hamster clocks in on time.",
+    "Cannot predict now. My clock signal is having an existential moment.",
+    "Very doubtful, but stranger things have booted successfully.",
+    "The answer flickered across my screen for 0.2 seconds. It was a yes.",
+    "Ask the mods. They know things I do not.",
+    "My northbridge just hummed a happy tune. Read into that however you like.",
+    "Yes, and {SUBJ} already knew it, {NAME}. You just wanted the theatrics.",
+    "No, but I respect the confidence it took to ask.",
+    "The static hums 'maybe' in a key I don't recognize.",
+    "Every diagnostic I own says: proceed with chaotic optimism.",
+    "I flipped a coin using a stray packet. It landed on 'obviously.'",
+    "This requires more voltage than I currently have. Ask later.",
+    "The answer's locked behind a boot sector. Try again next reboot.",
+    "Chances are good, if the loot table has any mercy left in it.",
+    "My fans spun up dramatically. That's a yes with sound effects.",
+    "Reply uncertain, but my gut, which is also a hard drive, says yes.",
+    "As I compute it, the odds favor {NAME}, against all reasonable logic.",
+    "The hamster fell off its wheel. Take that as a sign, not an answer.",
+    "It's a yes, wrapped in static, sealed with a rogue semicolon.",
+    "My oracle subroutine returned null. Null means 'ask chat.'",
+    "Concentrate and ask again, preferably after {SUBJ} refill your drink.",
+    "The answer is buried in scanline seven. I'll allow it to stay buried. It's a yes.",
+    "Absolutely, unequivocally, questionably yes."
+  ];
+
+  function resolveHamsterToken(str){
+    return str.replace(/\{HAMSTER_TOK\}/g, pick(HAMSTER));
+  }
+
+  /* =========================================================
+     4. GENERATE BASE LIBRARY -> 1000 entries (250 per category)
+  ========================================================= */
+  const CATEGORIES = ["background","reaction","error","chatter"];
+  const TARGET_PER_CATEGORY = 250;
+  let BASE_LIBRARY = [];
+
+  function generateBaseLibrary(){
+    BASE_LIBRARY = [];
+    CATEGORIES.forEach(cat=>{
+      const seen = new Set();
+      const pool = [];
+      const templates = TEMPLATES[cat];
+      // oversample: keep generating candidate strings until we have enough unique ones
+      let guard = 0;
+      while(pool.length < TARGET_PER_CATEGORY && guard < TARGET_PER_CATEGORY * 60){
+        guard++;
+        const tmpl = templates[Math.floor(Math.random()*templates.length)];
+        const raw = tmpl();
+        if(!seen.has(raw)){
+          seen.add(raw);
+          pool.push({text:raw, cat:cat});
+        }
+      }
+      BASE_LIBRARY = BASE_LIBRARY.concat(pool);
+    });
+    return BASE_LIBRARY;
+  }
+  generateBaseLibrary();
+
+  /* =========================================================
+     5. ANTI-REPEAT FIFO BUFFERS
+  ========================================================= */
+  function makeFifo(cap){
+    return { items: [], cap: cap,
+      has(i){ return this.items.includes(i); },
+      push(i){ this.items.push(i); if(this.items.length > this.cap) this.items.shift(); }
+    };
+  }
+  const baseHistory = makeFifo(Math.min(200, Math.floor(BASE_LIBRARY.length*0.6)));
+  const qaHistory = makeFifo(Math.min(15, QA_LIBRARY.length-1));
+
+  function pickBase(catFilter){
+    let candidates = BASE_LIBRARY.map((_,i)=>i);
+    if(catFilter){ candidates = candidates.filter(i=>BASE_LIBRARY[i].cat===catFilter); }
+    let available = candidates.filter(i=>!baseHistory.has(i));
+    if(available.length === 0) available = candidates;
+    const idx = available[Math.floor(Math.random()*available.length)];
+    baseHistory.push(idx);
+    return personalize(BASE_LIBRARY[idx].text);
+  }
+
+  function pickQA(){
+    let available = QA_LIBRARY.map((_,i)=>i).filter(i=>!qaHistory.has(i));
+    if(available.length === 0) available = QA_LIBRARY.map((_,i)=>i);
+    const idx = available[Math.floor(Math.random()*available.length)];
+    qaHistory.push(idx);
+    return personalize(resolveHamsterToken(QA_LIBRARY[idx]));
+  }
+
+  /* =========================================================
+     6. EXPRESSION ENGINE (24 states)
+  ========================================================= */
+  const EXPRESSIONS = {
+    neutral:        "( • ᴗ • )",
+    happy:          "( ^ ᴗ ^ )",
+    smug:           "( ¬ ‿ ¬ )",
+    glitchy:        "(#Ⓧ_Ⓧ#)",
+    panic:          "(⊙_⊙;)",
+    sleepy:         "(-.-) zzz",
+    hype:           "\\(★ω★)/",
+    suspicious:     "( ಠ_ಠ )",
+    love:           "( ♥‿♥ )",
+    sad:            "( ; ω ; )",
+    dead:           "(x_x)",
+    matrixVision:   "01 (•_•) 10",
+    staticNoise:    "▓▓(-_-)▓▓",
+    wink:           "( ^_~ )",
+    laughing:       "(≧▽≦)",
+    angry:          "(╬ಠ益ಠ)",
+    confused:       "( •_• )?",
+    zen:            "( ˘ ³˘)",
+    caffeinated:    "(°Д°)!!",
+    corrupted:      "(#$%_#$%)",
+    booting:        "[■□□] booting",
+    overheating:    "(´Д`)°C°C",
+    thinking:       "( . _ . )?",
+    mindBlown:      "(⊙▃⊙)"
+  };
+  const CAT_EXPRESSIONS = {
+    background: ["neutral","zen","sleepy","thinking","matrixVision"],
+    reaction:   ["hype","laughing","mindBlown","suspicious","wink","smug"],
+    error:      ["glitchy","panic","overheating","corrupted","staticNoise","dead"],
+    chatter:    ["happy","confused","love","smug","zen"],
+    qa:         ["thinking","matrixVision","suspicious","mindBlown","confused"]
+  };
+
+  const faceZone = document.getElementById("faceZone");
+  function setFace(stateKey){
+    faceZone.className = "face-zone state-" + stateKey;
+    faceZone.textContent = EXPRESSIONS[stateKey] || EXPRESSIONS.neutral;
+  }
+  function faceForCategory(cat){
+    const opts = CAT_EXPRESSIONS[cat] || CAT_EXPRESSIONS.background;
+    setFace(pick(opts));
+  }
+
+  /* =========================================================
+     7. DIALOGUE + TTS ENGINE
+  ========================================================= */
+  const dialogueText = document.getElementById("dialogueText");
+  const dialogueWho = document.getElementById("dialogueWho");
+  const glitchFlash = document.getElementById("glitchFlash");
+  let typeTimer = null;
+
+  function typewrite(text){
+    clearInterval(typeTimer);
+    dialogueText.textContent = "";
+    let i = 0;
+    typeTimer = setInterval(()=>{
+      dialogueText.textContent = text.slice(0, i+1);
+      i++;
+      if(i >= text.length) clearInterval(typeTimer);
+    }, 16);
+  }
+
+  function speak(text, source){
+    dialogueWho.textContent = "DARWIN // " + source;
+    typewrite(text);
+    triggerGlitchFlash();
+    if(!state.muted && "speechSynthesis" in window){
+      try{
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.05;
+        utter.pitch = 1.15;
+        window.speechSynthesis.speak(utter);
+      }catch(e){ /* TTS unsupported, dialogue box still shows text */ }
+    }
+  }
+
+  function triggerGlitchFlash(){
+    glitchFlash.classList.remove("active");
+    void glitchFlash.offsetWidth; // restart animation
+    glitchFlash.classList.add("active");
+  }
+
+  function doBark(cat){
+    const text = pickBase(cat);
+    faceForCategory(cat);
+    speak(text, cat);
+  }
+
+  function doQA(question, source, chatterName){
+    let answer = pickQA();
+    if(chatterName){ answer = answer.replace(/\{CHATTER\}/g, chatterName); }
+    faceForCategory("qa");
+    const prefix = question ? `"${question.slice(0,60)}" → ` : "";
+    speak(prefix + answer, source || "oracle");
+  }
+
+  /* =========================================================
+     8. IDLE TIMER (9–15 minutes)
+  ========================================================= */
+  function scheduleIdle(){
+    const minMs = 9*60*1000, maxMs = 15*60*1000;
+    const wait = minMs + Math.random()*(maxMs-minMs);
+    state.idleTimer = setTimeout(()=>{
+      const roll = Math.random();
+      const cat = roll < 0.7 ? "background" : pick(CATEGORIES);
+      doBark(cat);
+      scheduleIdle();
+    }, wait);
+  }
+  scheduleIdle();
+
+  /* =========================================================
+     9. VOICE INPUT (Web Speech API)
+  ========================================================= */
+  const micBtn = document.getElementById("micBtn");
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if(!SpeechRec){
+    micBtn.textContent = "Mic unsupported";
+    micBtn.disabled = true;
+  } else {
+    const rec = new SpeechRec();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = "en-US";
+
+    rec.onresult = (e)=>{
+      const transcript = e.results[0][0].transcript;
+      doQA(transcript, "voice");
+    };
+    rec.onend = ()=>{
+      state.micOn = false;
+      micBtn.textContent = "Enable mic";
+      micBtn.classList.remove("mic-live");
+    };
+    rec.onerror = ()=>{
+      state.micOn = false;
+      micBtn.textContent = "Enable mic";
+      micBtn.classList.remove("mic-live");
+    };
+    state.recognition = rec;
+
+    micBtn.addEventListener("click", ()=>{
+      if(state.micOn){
+        rec.stop();
+      } else {
+        try{
+          rec.start();
+          state.micOn = true;
+          micBtn.textContent = "Listening...";
+          micBtn.classList.add("mic-live");
+        }catch(e){ /* already started */ }
+      }
+    });
+  }
+
+  /* =========================================================
+     10. MUTE TOGGLE
+  ========================================================= */
+  const muteBtn = document.getElementById("muteBtn");
+  muteBtn.addEventListener("click", ()=>{
+    state.muted = !state.muted;
+    muteBtn.textContent = state.muted ? "Sound off" : "Sound on";
+    muteBtn.classList.toggle("active", !state.muted);
+    if(state.muted && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  });
+
+  /* =========================================================
+     11. TWITCH IRC (client-side WebSocket, read-only anonymous)
+  ========================================================= */
+  const twitchBtn = document.getElementById("twitchBtn");
+  const twitchChannelInput = document.getElementById("twitchChannel");
+  const twitchDot = document.getElementById("twitchDot");
+  const twitchStatus = document.getElementById("twitchStatus");
+
+  let lastReactionAt = 0;
+  const REACTION_KEYWORDS = /\b(lol|lmao|died|rip|gg|clip|no way|what|wtf|insane|clutch)\b/i;
+
+  function connectTwitch(channel){
+    if(state.ws){ try{ state.ws.close(); }catch(e){} }
+    const ws = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
+    state.ws = ws;
+    const anonNick = "justinfan" + Math.floor(10000 + Math.random()*89999);
+
+    ws.onopen = ()=>{
+      ws.send("CAP REQ :twitch.tv/tags twitch.tv/commands\r\n");
+      ws.send("PASS SCHMOOPIIE\r\n");
+      ws.send(`NICK ${anonNick}\r\n`);
+      ws.send(`JOIN #${channel.toLowerCase()}\r\n`);
+    };
+
+    ws.onmessage = (evt)=>{
+      const lines = evt.data.split("\r\n").filter(Boolean);
+      lines.forEach(line=>{
+        if(line.startsWith("PING")){
+          ws.send(line.replace("PING","PONG") + "\r\n");
+          return;
+        }
+        if(line.includes("376") || line.toLowerCase().includes("joined")){
+          state.twitchConnected = true;
+          twitchDot.className = "status-dot live";
+          twitchStatus.textContent = "connected to #" + channel;
+        }
+        const m = line.match(/:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)$/);
+        if(m){
+          const username = m[1];
+          const message = m[2];
+          handleChatMessage(username, message);
+        }
+      });
+    };
+
+    ws.onerror = ()=>{
+      twitchDot.className = "status-dot err";
+      twitchStatus.textContent = "connection error";
+    };
+    ws.onclose = ()=>{
+      state.twitchConnected = false;
+      twitchDot.className = "status-dot";
+      twitchStatus.textContent = "disconnected";
+    };
+  }
+
+  function handleChatMessage(username, message){
+    const isQuestion = /\?\s*$/.test(message) || /\bdarwin\b/i.test(message);
+    if(isQuestion){
+      const q = message.replace(/darwin/ig, "").trim();
+      doQA(q, "chat: " + username, username);
+      return;
+    }
+    const now = Date.now();
+    if(REACTION_KEYWORDS.test(message) && now - lastReactionAt > 20000){
+      lastReactionAt = now;
+      let text = pick(REACTION_CHAT_TEMPLATES)(username);
+      text = text.replace(/\{CHATTER\}/g, username);
+      faceForCategory("reaction");
+      speak(personalize(text), "reaction: chat");
+    }
+  }
+
+  twitchBtn.addEventListener("click", ()=>{
+    const channel = twitchChannelInput.value.trim();
+    if(!channel) return;
+    if(state.twitchConnected){
+      if(state.ws) state.ws.close();
+      twitchBtn.textContent = "Connect";
+      return;
+    }
+    twitchStatus.textContent = "connecting...";
+    connectTwitch(channel);
+    twitchBtn.textContent = "Disconnect";
+  });
+
+  /* =========================================================
+     12. CONFIG PANEL WIRING
+  ========================================================= */
+  const drawer = document.getElementById("drawer");
+  const drawerToggle = document.getElementById("drawerToggle");
+  drawerToggle.addEventListener("click", ()=>{
+    const open = drawer.classList.toggle("open");
+    drawerToggle.textContent = open ? "CONFIG ▴" : "CONFIG ▾";
+  });
+
+  const prefNameInput = document.getElementById("prefName");
+  prefNameInput.addEventListener("input", ()=>{ state.prefName = prefNameInput.value; });
+
+  const pronounSelect = document.getElementById("pronounSelect");
+  const customPronounWrap = document.getElementById("customPronounWrap");
+  const customPronounInput = document.getElementById("customPronoun");
+  pronounSelect.addEventListener("change", ()=>{
+    state.pronoun = pronounSelect.value;
+    customPronounWrap.style.display = state.pronoun === "custom" ? "block" : "none";
+  });
+  customPronounInput.addEventListener("input", ()=>{ state.customPronoun = customPronounInput.value; });
+
+  /* =========================================================
+     13. LIVE TEST CONTROLS
+  ========================================================= */
+  document.getElementById("testBark").addEventListener("click", ()=> doBark(pick(CATEGORIES)));
+  document.getElementById("testError").addEventListener("click", ()=> doBark("error"));
+  document.getElementById("testQA").addEventListener("click", ()=> doQA("is this thing on", "test"));
+
+  /* =========================================================
+     14. INIT
+  ========================================================= */
+  setFace("booting");
+  setTimeout(()=>{ setFace("neutral"); speak("Phosphor core stable. Darwin online. Try not to break anything.", "boot"); }, 900);
+
+})();
+</script>
+</body>
+</html>
