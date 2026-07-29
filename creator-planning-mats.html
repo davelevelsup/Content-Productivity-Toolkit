@@ -158,30 +158,48 @@
     position:absolute; top:2px; right:2px; width:15px; height:15px;
     background:rgba(0,0,0,.45); color:var(--mist); border:none; border-radius:50%;
     font-size:9px; line-height:1; cursor:pointer; padding:0;
-    display:flex; align-items:center; justify-content:center; z-index:2;
+    display:flex; align-items:center; justify-content:center; z-index:3;
   }
   .block__remove:hover{ color:var(--red); background:rgba(0,0,0,.7); }
   .block__label{
     background:var(--red-fill); color:var(--red);
     font-family:'Space Mono',monospace; font-size:9.5px; letter-spacing:.03em;
     text-transform:uppercase; padding:4px 18px 4px 6px; text-align:center; outline:none;
+    flex:0 0 auto;
   }
+  .block__imgwrap{
+    position:relative; flex:1; min-height:0; display:none;
+    align-items:center; justify-content:center; overflow:hidden;
+    background:rgba(0,0,0,.22);
+  }
+  .block__imgwrap[data-has="true"]{ display:flex; }
+  .block__img{
+    max-width:100%; max-height:100%; width:auto; height:auto;
+    object-fit:contain; display:block;
+  }
+  .block__imgremove{
+    position:absolute; top:2px; right:2px; width:15px; height:15px;
+    background:rgba(0,0,0,.5); color:var(--mist); border:none; border-radius:50%;
+    font-size:9px; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center; z-index:3;
+  }
+  .block__imgremove:hover{ color:var(--red); background:rgba(0,0,0,.75); }
   .block__body{
     flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
     font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ash);
-    padding:6px 7px; line-height:1.35; outline:none;
+    padding:6px 7px; line-height:1.35; outline:none; min-height:0;
   }
   [contenteditable="true"]:hover{ background:rgba(226,31,45,.08); }
   [contenteditable="true"]:focus{ background:rgba(226,31,45,.12); box-shadow:0 0 0 1px var(--hairline); }
 
-  .block__body img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto;
-}
-  
+  .block__addimg{
+    flex:0 0 auto; width:100%; background:transparent; border:none;
+    border-top:1px dashed var(--hairline); color:var(--mist);
+    font-family:'Rajdhani',sans-serif; font-size:9.5px; letter-spacing:.04em;
+    text-transform:uppercase; padding:4px 0; cursor:pointer;
+  }
+  .block__addimg:hover{ color:var(--red); }
+
   .daycol__addbtn{
     margin-top:6px; width:100%; background:transparent; border:1px dashed var(--hairline);
     color:var(--mist); font-family:'Rajdhani',sans-serif; font-size:10.5px; letter-spacing:.05em;
@@ -190,7 +208,9 @@
   .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
 
   .mat.exporting .daycol__addbtn,
-  .mat.exporting .block__remove{ display:none !important; }
+  .mat.exporting .block__remove,
+  .mat.exporting .block__addimg,
+  .mat.exporting .block__imgremove{ display:none !important; }
 
   .icon-svg{ stroke:var(--red); fill:none; }
   .hint{ font-size:12px; color:#8f8c94; margin-top:12px; text-align:center; }
@@ -200,7 +220,7 @@
 <div class="app">
   <div class="app__header">
     <h1>Creator Planning Mats</h1>
-    <p>Click any text to edit it. Use + Add Box / the ✕ on a box to add or remove boxes. Pick a palette, then export.</p>
+    <p>Click any text to edit it. Use + Add Box / ✕ to add or remove boxes, and + Add Image to drop a picture into a box — it'll shrink to fit, never expand the box. Pick a palette, then export.</p>
   </div>
 
   <div class="toolbar">
@@ -313,7 +333,12 @@
       <div class="block">
         <button class="block__remove" title="Remove box">✕</button>
         <div class="block__label" contenteditable="true" spellcheck="false">${b.label}</div>
+        <div class="block__imgwrap" data-has="false">
+          <img class="block__img" alt="">
+          <button class="block__imgremove" title="Remove image">✕</button>
+        </div>
         <div class="block__body" contenteditable="true" spellcheck="false">${b.body}</div>
+        <button class="block__addimg" title="Add image to this box">+ Add Image</button>
       </div>
     `;
   }
@@ -361,7 +386,26 @@
   renderMat(matBlueprint, blueprintData);
   renderMat(matRelease, releaseData);
 
-  // ---------- add / remove boxes (event delegation) ----------
+  // ---------- add / remove boxes, add / remove images (event delegation) ----------
+  function triggerImagePick(block){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const imgwrap = block.querySelector('.block__imgwrap');
+        const img = block.querySelector('.block__img');
+        img.src = ev.target.result;
+        imgwrap.dataset.has = 'true';
+      };
+      reader.readAsDataURL(file);
+    });
+    input.click();
+  }
+
   document.getElementById('scaleWrapper').addEventListener('click', (e) => {
     if (e.target.classList.contains('block__remove')){
       e.target.closest('.block').remove();
@@ -370,6 +414,14 @@
       const wrapper = document.createElement('div');
       wrapper.innerHTML = blockHtml({label:'NEW BOX', body:'Click to edit'});
       blocksWrap.appendChild(wrapper.firstElementChild);
+    } else if (e.target.classList.contains('block__addimg')){
+      triggerImagePick(e.target.closest('.block'));
+    } else if (e.target.classList.contains('block__imgremove')){
+      const block = e.target.closest('.block');
+      const imgwrap = block.querySelector('.block__imgwrap');
+      const img = block.querySelector('.block__img');
+      img.src = '';
+      imgwrap.dataset.has = 'false';
     }
   });
 
