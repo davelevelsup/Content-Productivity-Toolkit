@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Creator Planning Mats</title>
+<title>Stream Control Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --void:#0a0a0c;
@@ -28,77 +27,42 @@
     min-height:100vh;
     padding:28px 16px 60px;
   }
-  .app{ max-width:1680px; margin:0 auto; }
-  .app__header{ margin-bottom:18px; }
+  .app{ max-width:1200px; margin:0 auto; }
+  .app__header{ margin-bottom:16px; }
   .app__header h1{
     font-family:'Rajdhani',sans-serif; font-weight:700; font-size:20px;
     margin:0 0 4px; letter-spacing:.02em;
   }
   .app__header p{ margin:0; font-size:13px; color:#9a97a0; }
 
-  .toolbar{
-    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-    margin-bottom:18px;
-  }
-  .tabs{ display:flex; gap:8px; }
-  .tab{
-    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; letter-spacing:.04em;
-    text-transform:uppercase; background:#222226; color:var(--mist);
-    border:1px solid #2c2c31; border-radius:6px; padding:9px 16px; cursor:pointer;
-  }
-  .tab[data-active="true"]{ background:var(--red-fill); color:var(--ash); border-color:var(--red); }
-  .tab:focus-visible, .export-btn:focus-visible, .swatch:focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
-  .spacer{ flex:1; }
-
+  .toolbar{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
   .palette-group{ display:flex; align-items:center; gap:8px; }
   .palette-label{
     font-family:'Rajdhani',sans-serif; font-size:12px; color:var(--mist);
     text-transform:uppercase; letter-spacing:.06em;
   }
   .swatches{ display:flex; gap:6px; }
-  .swatch{
-    width:22px; height:22px; border-radius:50%; border:2px solid #2c2c31;
-    cursor:pointer; padding:0;
-  }
+  .swatch{ width:22px; height:22px; border-radius:50%; border:2px solid #2c2c31; cursor:pointer; padding:0; }
   .swatch[data-active="true"]{ border-color:#fff; }
   #customColor{ width:34px; height:28px; border:none; background:none; padding:0; cursor:pointer; }
+  .spacer{ flex:1; }
 
-  .export-btn{
-    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; letter-spacing:.04em;
-    text-transform:uppercase; background:var(--red); color:#1a0507;
-    border:1px solid var(--red); border-radius:6px; padding:10px 18px; cursor:pointer;
-  }
-  .export-btn:hover{ filter:brightness(1.08); }
-  .export-btn:active{ transform:scale(.98); }
-
-  .mat-scale-wrapper{ position:relative; width:100%; overflow:hidden; }
-
-  .mat{
-    width:1600px; height:900px;
+  /* ---------- outer frame (matches planning mats) ---------- */
+  .frame{
+    position:relative;
     background:var(--void);
     border:2px solid var(--red);
     border-radius:6px;
-    position:absolute; top:0; left:0;
-    transform-origin: top left;
-    padding:28px 34px 24px;
-    display:flex; flex-direction:column;
-    font-family:'Rajdhani',sans-serif;
-    color:var(--ash);
+    padding:34px 30px 26px;
   }
-  .mat[data-hidden="true"]{ display:none; }
-
   .corner{ position:absolute; width:26px; height:26px; pointer-events:none; }
   .corner::before, .corner::after{ content:""; position:absolute; background:var(--red); }
   .corner::before{ height:3px; width:100%; }
   .corner::after{ width:3px; height:100%; }
-  .corner--tl{ top:12px; left:12px; }
-  .corner--tl::before{ top:0; left:0; } .corner--tl::after{ top:0; left:0; }
-  .corner--tr{ top:12px; right:12px; }
-  .corner--tr::before{ top:0; right:0; } .corner--tr::after{ top:0; right:0; }
-  .corner--bl{ bottom:12px; left:12px; }
-  .corner--bl::before{ bottom:0; left:0; } .corner--bl::after{ bottom:0; left:0; }
-  .corner--br{ bottom:12px; right:12px; }
-  .corner--br::before{ bottom:0; right:0; } .corner--br::after{ bottom:0; right:0; }
+  .corner--tl{ top:12px; left:12px; } .corner--tl::before{ top:0; left:0; } .corner--tl::after{ top:0; left:0; }
+  .corner--tr{ top:12px; right:12px; } .corner--tr::before{ top:0; right:0; } .corner--tr::after{ top:0; right:0; }
+  .corner--bl{ bottom:12px; left:12px; } .corner--bl::before{ bottom:0; left:0; } .corner--bl::after{ bottom:0; left:0; }
+  .corner--br{ bottom:12px; right:12px; } .corner--br::before{ bottom:0; right:0; } .corner--br::after{ bottom:0; right:0; }
 
   .top-tab{
     position:absolute; top:-2px; left:50%; transform:translateX(-50%) rotate(45deg);
@@ -108,363 +72,528 @@
   .top-tab__line--l{ right:calc(50% + 12px); }
   .top-tab__line--r{ left:calc(50% + 12px); }
 
-  .mat__header{ position:relative; display:flex; flex-direction:column; align-items:center; padding-top:6px; }
+  .frame__header{ position:relative; display:flex; flex-direction:column; align-items:center; padding-top:6px; margin-bottom:8px; }
   .badge{
     position:absolute; top:-6px; left:2px;
-    width:64px; height:64px; border-radius:50%;
+    width:56px; height:56px; border-radius:50%;
     border:3px solid var(--red); background:var(--panel);
     display:flex; align-items:center; justify-content:center;
   }
-  .mat-title{
-    font-family:'Big Shoulders Stencil',sans-serif; font-weight:800; font-size:52px;
+  .frame-title{
+    font-family:'Big Shoulders Stencil',sans-serif; font-weight:800; font-size:42px;
     letter-spacing:.03em; color:var(--ash); text-align:center; margin:0;
     text-shadow: 0 0 18px var(--glow);
-    outline:none;
   }
-  .mat-meta{
+  .frame-meta{
     position:absolute; top:2px; right:2px;
-    font-family:'Space Mono',monospace; font-size:12px; color:var(--mist);
-    text-align:right; outline:none;
+    font-family:'Space Mono',monospace; font-size:11px; color:var(--mist); text-align:right;
   }
 
-  .matgrid{
-    display:grid; grid-template-columns:repeat(7,1fr); gap:10px;
-    flex:1; min-height:0; margin-top:30px;
+  section{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:6px;
+    padding:20px 22px; margin-top:20px;
   }
-  .daycol{
-    border:1.5px solid var(--hairline); border-radius:4px;
-    background:var(--panel);
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .section-title{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; letter-spacing:.03em; margin:0; text-transform:uppercase; }
+  .section-sub{ font-size:12px; color:var(--mist); margin-top:2px; }
+
+  .status-dot{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--mist);
+  }
+  .status-dot::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--mist); display:inline-block; }
+  .status-dot[data-state="running"]{ color:var(--red); }
+  .status-dot[data-state="running"]::before{ background:var(--red); box-shadow:0 0 8px var(--red); }
+  .status-dot[data-state="live"]{ color:var(--red); }
+  .status-dot[data-state="live"]::before{ background:var(--red); box-shadow:0 0 10px var(--red); }
+  .status-dot[data-state="onair"]{ color:var(--red); }
+  .status-dot[data-state="onair"]::before{ background:var(--red); box-shadow:0 0 10px var(--red); }
+
+  /* ---------- Live desk (countdown + sticky) ---------- */
+  .livedesk{ display:grid; grid-template-columns:1.3fr 1fr; gap:18px; align-items:stretch; margin-top:20px; }
+  @media (max-width:780px){ .livedesk{ grid-template-columns:1fr; } }
+  .livedesk__card{ background:var(--panel); border:1px solid var(--hairline); border-radius:6px; padding:20px 22px; }
+
+  .timer-block{ display:flex; flex-direction:column; gap:14px; height:100%; }
+  .clockwrap{
+    align-self:flex-start; border:2px solid var(--hairline); border-radius:12px;
+    padding:14px 20px; background:var(--panel-raised); text-align:center;
+    transition:border-color .25s ease, box-shadow .25s ease;
+  }
+  .clockwrap[data-state="running"]{ border-color:var(--red); }
+  .clockwrap[data-state="live"], .clockwrap[data-state="onair"]{ border-color:var(--red); box-shadow:0 0 24px var(--glow); }
+  @media (prefers-reduced-motion: no-preference){
+    .clockwrap[data-state="live"], .clockwrap[data-state="onair"]{ animation:cuepulse 1.2s ease-in-out infinite; }
+  }
+  @keyframes cuepulse{
+    0%,100%{ box-shadow:0 0 16px var(--glow); }
+    50%{ box-shadow:0 0 32px var(--glow); }
+  }
+  .clock-display{ font-family:'Space Mono',monospace; font-weight:700; font-size:40px; letter-spacing:.02em; line-height:1; color:var(--ash); }
+  .clock-display--live{ color:var(--red); }
+  .clock-label-under{ margin-top:6px; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mist); font-family:'Rajdhani',sans-serif; font-weight:600; }
+
+  .field-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  label.small-label{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:10px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--mist); display:block; margin-bottom:4px;
+  }
+  input[type="text"], input[type="number"], textarea{
+    background:var(--void); border:1px solid var(--hairline); color:var(--ash);
+    border-radius:6px; padding:9px 11px; font-family:'Inter',sans-serif; font-size:14px;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus{
+    outline:2px solid var(--red); outline-offset:1px; border-color:transparent;
+  }
+  .label-input{ width:100%; max-width:340px; font-weight:600; }
+  .duration-input{ width:60px; font-family:'Space Mono',monospace; text-align:center; }
+  .duration-group{ display:flex; align-items:flex-end; gap:6px; }
+  .duration-colon{ font-family:'Space Mono',monospace; font-size:18px; color:var(--mist); padding-bottom:8px; }
+
+  button{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:.06em;
+    text-transform:uppercase; border-radius:6px; border:1px solid var(--hairline);
+    background:var(--panel-raised); color:var(--ash); padding:10px 16px; cursor:pointer;
+    transition:transform .1s ease, background .15s ease, border-color .15s ease;
+  }
+  button:hover{ border-color:var(--mist); }
+  button:active{ transform:scale(.97); }
+  button:focus-visible, .swatch:focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
+  button.primary{ background:var(--red); color:#1a0507; border-color:var(--red); }
+  button.danger{ background:transparent; color:var(--red); border-color:var(--red); }
+  button.ghost{ background:transparent; }
+  button.chip{ padding:6px 12px; font-size:11px; background:var(--void); }
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* ---------- Sticky note ---------- */
+  .sticky-card{
+    background:#fff8dc; color:#2a2410; border-radius:4px;
+    padding:18px 16px 16px; height:100%; min-height:200px;
     display:flex; flex-direction:column;
-    padding:10px 9px;
-    min-height:0;
+    box-shadow:0 10px 18px -8px rgba(0,0,0,.5);
+    position:relative; transform:rotate(-1deg);
   }
-  .daycol__head{ display:flex; align-items:center; gap:6px; justify-content:center; }
-  .daycol__icon{ width:16px; height:16px; flex:0 0 auto; }
-  .daycol__icon svg{ width:100%; height:100%; }
-  .daycol__day{
-    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em;
-    color:var(--red); text-transform:uppercase; text-align:center; outline:none;
+  .sticky-card::before{
+    content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%);
+    width:14px; height:14px; border-radius:50%; background:var(--red);
+    box-shadow:0 2px 4px rgba(0,0,0,.4);
   }
-  .daycol__subtitle{
-    font-size:10.5px; color:var(--mist); text-align:center; margin:4px 0 10px;
-    letter-spacing:.02em; line-height:1.3; outline:none;
+  .sticky-card__title{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; letter-spacing:.04em;
+    text-transform:uppercase; background:transparent; border:none;
+    border-bottom:1px dashed rgba(0,0,0,.25); color:#2a2410; padding:2px 0 6px; margin-bottom:8px; width:100%;
   }
-  .daycol__blocks{ display:flex; flex-direction:column; gap:7px; flex:1; min-height:0; }
-  .block{
-    border:1px solid var(--hairline); border-radius:3px; background:var(--panel-raised);
-    display:flex; flex-direction:column; flex:1; overflow:hidden; position:relative;
+  .sticky-card__title:focus{ outline:none; border-bottom-color:#2a2410; }
+  .sticky-card__body{
+    background:transparent; border:none; resize:none; flex:1;
+    font-family:'Inter',sans-serif; font-size:13px; color:#3a3115; padding:0; line-height:1.5;
   }
-  .block__remove{
-    position:absolute; top:2px; right:2px; width:15px; height:15px;
-    background:rgba(0,0,0,.45); color:var(--mist); border:none; border-radius:50%;
-    font-size:9px; line-height:1; cursor:pointer; padding:0;
-    display:flex; align-items:center; justify-content:center; z-index:3;
-  }
-  .block__remove:hover{ color:var(--red); background:rgba(0,0,0,.7); }
-  .block__label{
-    background:var(--red-fill); color:var(--red);
-    font-family:'Space Mono',monospace; font-size:9.5px; letter-spacing:.03em;
-    text-transform:uppercase; padding:4px 18px 4px 6px; text-align:center; outline:none;
-    flex:0 0 auto;
-  }
-  .block__imgwrap{
-    position:relative; flex:1; min-height:0; display:none;
-    align-items:center; justify-content:center; overflow:hidden;
-    background:rgba(0,0,0,.22);
-  }
-  .block__imgwrap[data-has="true"]{ display:flex; }
-  .block__img{
-    max-width:100%; max-height:100%; width:auto; height:auto;
-    object-fit:contain; display:block;
-  }
-  .block__imgremove{
-    position:absolute; top:2px; right:2px; width:15px; height:15px;
-    background:rgba(0,0,0,.5); color:var(--mist); border:none; border-radius:50%;
-    font-size:9px; cursor:pointer; padding:0;
-    display:flex; align-items:center; justify-content:center; z-index:3;
-  }
-  .block__imgremove:hover{ color:var(--red); background:rgba(0,0,0,.75); }
-  .block__body{
-    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
-    font-family:'Inter',sans-serif; font-size:11.5px; color:var(--ash);
-    padding:6px 7px; line-height:1.35; outline:none; min-height:0;
-  }
-  [contenteditable="true"]:hover{ background:rgba(226,31,45,.08); }
-  [contenteditable="true"]:focus{ background:rgba(226,31,45,.12); box-shadow:0 0 0 1px var(--hairline); }
+  .sticky-card__body:focus{ outline:none; }
+  .sticky-card__body::placeholder{ color:#8a7e4f; }
 
-  .block__addimg{
-    flex:0 0 auto; width:100%; background:transparent; border:none;
-    border-top:1px dashed var(--hairline); color:var(--mist);
-    font-family:'Rajdhani',sans-serif; font-size:9.5px; letter-spacing:.04em;
-    text-transform:uppercase; padding:4px 0; cursor:pointer;
+  /* ---------- Stream timeline ---------- */
+  .streambay{ display:flex; flex-direction:column; gap:20px; }
+  .streamclock-row{ display:flex; gap:24px; flex-wrap:wrap; align-items:center; }
+
+  .log-capture{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .log-capture input[type="text"]{ flex:1; min-width:200px; }
+  .clock-badge{
+    font-family:'Space Mono',monospace; font-size:13px; background:var(--void);
+    border:1px solid var(--hairline); border-radius:6px; padding:9px 12px; color:var(--red); white-space:nowrap;
   }
-  .block__addimg:hover{ color:var(--red); }
+  .log-list{ list-style:none; margin:0; padding:0; max-height:280px; overflow-y:auto; border-top:1px solid var(--hairline); }
+  .log-list li{ display:flex; gap:12px; align-items:baseline; padding:10px 2px; border-bottom:1px solid var(--hairline); }
+  .log-list__time{ font-family:'Space Mono',monospace; font-size:12px; color:var(--red); flex:0 0 auto; min-width:90px; }
+  .log-list__note{ flex:1; font-size:13px; color:var(--ash); }
+  .log-list__del{ background:transparent; border:none; color:var(--mist); font-size:12px; cursor:pointer; padding:2px 6px; }
+  .log-list__del:hover{ color:var(--red); }
+  .log-empty{ color:var(--mist); font-size:13px; padding:18px 2px; text-align:center; }
+  .log-actions{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
 
-  .daycol__addbtn{
-    margin-top:6px; width:100%; background:transparent; border:1px dashed var(--hairline);
-    color:var(--mist); font-family:'Rajdhani',sans-serif; font-size:10.5px; letter-spacing:.05em;
-    text-transform:uppercase; border-radius:3px; padding:5px 0; cursor:pointer; flex:0 0 auto;
+  /* ---------- Goals ---------- */
+  .goals-pad{
+    width:100%; min-height:180px;
+    background:linear-gradient(var(--panel) 0, var(--panel) 27px, var(--hairline) 28px);
+    background-size:100% 28px; line-height:28px; padding:0 4px; border:none;
+    color:var(--ash); font-family:'Inter',sans-serif; font-size:14px; resize:vertical;
   }
-  .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
+  .goals-pad:focus{ outline:none; }
 
-  .mat.exporting .daycol__addbtn,
-  .mat.exporting .block__remove,
-  .mat.exporting .block__addimg,
-  .mat.exporting .block__imgremove{ display:none !important; }
-
-  .icon-svg{ stroke:var(--red); fill:none; }
-  .hint{ font-size:12px; color:#8f8c94; margin-top:12px; text-align:center; }
+  footer{ text-align:center; font-size:12px; color:var(--mist); margin-top:16px; }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="app__header">
-    <h1>Creator Planning Mats</h1>
-    <p>Click any text to edit it. Use + Add Box / ✕ to add or remove boxes, and + Add Image to drop a picture into a box — it'll shrink to fit, never expand the box. Pick a palette, then export.</p>
+    <h1>Stream Control Desk</h1>
+    <p>Same look as your planning mats — pick a palette, run your stream.</p>
   </div>
 
   <div class="toolbar">
-    <div class="tabs">
-      <button class="tab" data-mat="blueprint" data-active="true">Weekly Blueprint</button>
-      <button class="tab" data-mat="release">Content Schedule</button>
-    </div>
-
     <div class="palette-group">
       <span class="palette-label">Palette</span>
       <div class="swatches" id="swatches"></div>
       <input type="color" id="customColor" value="#e21f2d" aria-label="Custom accent color">
     </div>
-
     <div class="spacer"></div>
-    <button class="export-btn" id="resetBtn" style="background:transparent;color:var(--mist);border-color:#2c2c31;">Reset to Default</button>
-    <button class="export-btn" id="exportBtn">Export PNG (16:9)</button>
   </div>
 
-  <div class="mat-scale-wrapper" id="scaleWrapper">
-    <div class="mat" id="mat-blueprint" data-matname="creator-weekly-blueprint" data-hidden="false"></div>
-    <div class="mat" id="mat-release" data-matname="video-release-schedule" data-hidden="true"></div>
+  <div class="frame">
+    <div class="corner corner--tl"></div>
+    <div class="corner corner--tr"></div>
+    <div class="corner corner--bl"></div>
+    <div class="corner corner--br"></div>
+    <div class="top-tab"></div>
+    <div class="top-tab__line top-tab__line--l"></div>
+    <div class="top-tab__line top-tab__line--r"></div>
+
+    <div class="frame__header">
+      <div class="badge">
+        <svg width="26" height="26" viewBox="0 0 24 24" stroke="var(--red)" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20V6M12 6l-5 5M12 6l5 5"/>
+        </svg>
+      </div>
+      <div class="frame-meta">SESSION ONLY</div>
+      <h2 class="frame-title">STREAM CONTROL DESK</h2>
+    </div>
+
+    <!-- LIVE DESK: countdown + sticky note -->
+    <div class="livedesk">
+      <div class="livedesk__card">
+        <div class="section-head">
+          <div>
+            <p class="section-title">Game Switch Cue</p>
+            <p class="section-sub">Countdown to your next switch-up</p>
+          </div>
+          <span class="status-dot" id="gameStatusDot" data-state="idle">Idle</span>
+        </div>
+        <div class="timer-block">
+          <div class="clockwrap" id="gameClockWrap" data-state="idle">
+            <div class="clock-display" id="gameClockDisplay">05:00</div>
+            <div class="clock-label-under" id="gameClockLabelUnder">Switch to next game</div>
+          </div>
+          <div>
+            <label class="small-label" for="timerLabel">Cue label</label>
+            <input type="text" id="timerLabel" class="label-input" value="Switch to next game" maxlength="60">
+          </div>
+          <div class="field-row">
+            <div>
+              <label class="small-label" for="minInput">Minutes</label>
+              <input type="number" id="minInput" class="duration-input" value="5" min="0" max="999">
+            </div>
+            <div class="duration-colon">:</div>
+            <div>
+              <label class="small-label" for="secInput">Seconds</label>
+              <input type="number" id="secInput" class="duration-input" value="0" min="0" max="59">
+            </div>
+          </div>
+          <div class="chip-row">
+            <button class="chip" data-preset="5">5m</button>
+            <button class="chip" data-preset="10">10m</button>
+            <button class="chip" data-preset="15">15m</button>
+            <button class="chip" data-preset="30">30m</button>
+            <button class="chip" data-preset="60">60m</button>
+          </div>
+          <div class="chip-row">
+            <button class="primary" id="startBtn">Start</button>
+            <button id="pauseBtn">Pause</button>
+            <button class="ghost" id="resetTimerBtn">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky-card">
+        <input class="sticky-card__title" value="Reminder" maxlength="30">
+        <textarea class="sticky-card__body" placeholder="Goals, cues, whatever you need to remember mid-stream..."></textarea>
+      </div>
+    </div>
+
+    <!-- STREAM TIMELINE -->
+    <section>
+      <div class="streambay">
+        <div class="section-head">
+          <div>
+            <p class="section-title">Stream Timer</p>
+            <p class="section-sub">Counts up from when you go live — notes below timestamp against this</p>
+          </div>
+          <span class="status-dot" id="streamStatusDot" data-state="idle">Off air</span>
+        </div>
+
+        <div class="streamclock-row">
+          <div class="clockwrap" id="streamClockWrap" data-state="idle">
+            <div class="clock-display" id="streamClockDisplay">00:00:00</div>
+            <div class="clock-label-under">Elapsed stream time</div>
+          </div>
+          <div class="chip-row">
+            <button class="primary" id="streamStartBtn">Go live</button>
+            <button id="streamPauseBtn">Pause</button>
+            <button class="ghost" id="streamResetBtn">Reset</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-head" style="margin-bottom:10px;">
+            <div>
+              <p class="section-title" style="font-size:13px;">Notes</p>
+              <p class="section-sub">Timestamped to stream length — export for VOD chapters</p>
+            </div>
+          </div>
+
+          <div class="log-capture">
+            <span class="clock-badge" id="logClockBadge">00:00:00</span>
+            <input type="text" id="noteInput" placeholder="Optional note... (Enter to log)">
+            <button class="primary" id="logBtn">Add note</button>
+            <button id="markBtn">Mark ⏱</button>
+          </div>
+
+          <ul class="log-list" id="logList"></ul>
+          <div class="log-empty" id="logEmpty">No notes yet — log something and it'll show up here.</div>
+
+          <div class="log-actions">
+            <button id="exportBtn">Export as .txt</button>
+            <button class="danger" id="clearLogBtn">Clear log</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GOALS -->
+    <section>
+      <div class="section-head">
+        <div>
+          <p class="section-title">Goals &amp; Planning</p>
+          <p class="section-sub">Free space for this stream — topics, targets, whatever's on your mind</p>
+        </div>
+      </div>
+      <textarea class="goals-pad" id="goalsPad" placeholder="Today's plan..."></textarea>
+    </section>
   </div>
 
-  <p class="hint">Export renders a 1920×1080 PNG of the mat currently on screen.</p>
+  <footer>Built for one session at a time. Refresh clears everything — export your log first.</footer>
 </div>
 
 <script>
-  const ICONS = {
-    broadcast: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" fill="var(--red)"/><path d="M7 9a7 7 0 0 1 10 0M4.2 6.2a10.5 10.5 0 0 1 15.6 0" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-    gear: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6"/></svg>`,
-    pencil: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg>`,
-    users: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.4" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="2.7"/><circle cx="16" cy="9.5" r="2.2"/><path d="M3 20c0-3 2.4-5.2 5.5-5.2S14 17 14 20M14 20c0-2.4 1.8-4.2 4-4.2s4 1.8 4 4.2"/></svg>`,
-    moon: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5z" fill="var(--red)" stroke="none"/></svg>`,
-    globe: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.4 2.4 2.4 13.6 0 16M12 4c-2.4 2.4-2.4 13.6 0 16"/></svg>`,
-    drop: `<svg class="icon-svg" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7 10l5 5 5-5M4 19h16"/></svg>`
-  };
+  // ---------- Game switch countdown ----------
+  const minInput = document.getElementById('minInput');
+  const secInput = document.getElementById('secInput');
+  const timerLabel = document.getElementById('timerLabel');
+  const gameClockDisplay = document.getElementById('gameClockDisplay');
+  const gameClockLabelUnder = document.getElementById('gameClockLabelUnder');
+  const gameClockWrap = document.getElementById('gameClockWrap');
+  const gameStatusDot = document.getElementById('gameStatusDot');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetTimerBtn = document.getElementById('resetTimerBtn');
 
-  const blueprintData = {
-    title: "CREATOR WEEKLY BLUEPRINT",
-    meta: "25-HR NON-STREAMING ALLOCATION",
-    columns: [
-      { day:"MONDAY", icon:"broadcast", subtitle:"6 HR STREAM (4PM) + PRE-GAME PREP", blocks:[
-        {label:"DAYTIME (1.5 HR)", body:"Stream setup, title/thumbnail finalization, and community check-ins."},
-        {label:"BLOCK 1 (2 HR)", body:"Minecraft All the Mons Apokélypse"},
-        {label:"BLOCK 2 (2 HR)", body:"Game Demo or Review Key"},
-        {label:"BLOCK 3 (2 HR)", body:"Vibe or Community Game"}
-      ]},
-      { day:"TUESDAY", icon:"gear", subtitle:"PROD, EDIT, ASSET & DEEP WORK — 9 HR TOTAL", blocks:[
-        {label:"BLOCK 1 (4 HR)", body:"Video Editing, VOD+ Pipeline & Vault Backlog Archiving"},
-        {label:"BLOCK 2 (3 HR)", body:"Asset Creation, Collab Planning"},
-        {label:"BLOCK 3 (2 HR)", body:"Flex Time"}
-      ]},
-      { day:"WEDNESDAY", icon:"broadcast", subtitle:"6 HR STREAM (5PM) + PRE-GAME PREP", blocks:[
-        {label:"DAYTIME (1.5 HR)", body:"Mid-week content review and stream board prep."},
-        {label:"BLOCK 1 (2 HR)", body:"Narrative Game"},
-        {label:"BLOCK 2 (2 HR)", body:"Mario Maker (or similar) — start with community levels"},
-        {label:"BLOCK 3 (2 HR)", body:"Retro Game"}
-      ]},
-      { day:"THURSDAY", icon:"pencil", subtitle:"CREATIVE DEV, WRITING & OUTREACH — 9 HR TOTAL", blocks:[
-        {label:"BLOCK 1 (4 HR)", body:"TTRPG System Design — The B.A.R.D. Files & Skald expansion worldbuilding"},
-        {label:"BLOCK 2 (3 HR)", body:"Flex"},
-        {label:"BLOCK 3 (2 HR)", body:"Creator outreach, community networking, and pipeline syncs"}
-      ]},
-      { day:"FRIDAY", icon:"users", subtitle:"DEEP FOCUS & GAME GREMLINS LIVE", blocks:[
-        {label:"DAYTIME (4 HR)", body:"Overflow editing for narrative game sessions and VOD polish before broadcast."},
-        {label:"START 7:00 PM CT — NO CAP", body:"Game Gremlins Live"},
-        {label:"BLOCK 1 (1 HR)", body:"Just Chatting"},
-        {label:"BLOCK 2 (1.5 HR)", body:"Daily Game Lineup (DLES)"},
-        {label:"BLOCK 3 (1.5+ HR)", body:"Tech News & Feature Game"}
-      ]},
-      { day:"SATURDAY", icon:"moon", subtitle:"OFF-AIR / HARD STOP", blocks:[
-        {label:"REST & RECOVERY", body:"Completely offline. Zero production, zero streaming."}
-      ]},
-      { day:"SUNDAY", icon:"globe", subtitle:"THE FUCTORY TOUR", blocks:[
-        {label:"START 7:00 PM CT (4+ HR)", body:"Community multiplayer and collaborative play."}
-      ]}
-    ]
-  };
+  let gameRemaining = 300;
+  let gameIntervalId = null;
+  let gameRunning = false;
+  let audioCtx = null;
 
-  const releaseData = {
-    title: "CONTENT SCHEDULE",
-    meta: "VIDEO RELEASE LINEUP",
-    columns: [
-      { day:"MONDAY", icon:"gear", subtitle:"NO RELEASE", blocks:[
-        {label:"STATUS", body:"Editing continues — no release today."}
-      ]},
-      { day:"TUESDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
-        {label:"RELEASES", body:"Monday Stream Video Release."}
-      ]},
-      { day:"WEDNESDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
-        {label:"RELEASES", body:"Sunday Fuctory Tour Video Release."}
-      ]},
-      { day:"THURSDAY", icon:"gear", subtitle:"NO RELEASE", blocks:[
-        {label:"STATUS", body:"Outreach & writing — no release today."}
-      ]},
-      { day:"FRIDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
-        {label:"RELEASES", body:"Wednesday Retro Video Release."}
-      ]},
-      { day:"SATURDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
-        {label:"RELEASES", body:"Wednesday Narrative Edit Video Release."}
-      ]},
-      { day:"SUNDAY", icon:"drop", subtitle:"VIDEO RELEASE", blocks:[
-        {label:"RELEASES", body:"Wednesday Mario Maker (or similar) Video Release."}
-      ]}
-    ]
-  };
-
-  function esc(str){
-    return String(str == null ? '' : str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function fmt(s){
+    const m = Math.floor(s/60);
+    const sec = s%60;
+    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+  function fmtLong(s){
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = s%60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
   }
 
-  function blockHtml(b){
-    const hasImg = !!b.img;
-    return `
-      <div class="block">
-        <button class="block__remove" title="Remove box">✕</button>
-        <div class="block__label" contenteditable="true" spellcheck="false">${esc(b.label)}</div>
-        <div class="block__imgwrap" data-has="${hasImg}">
-          <img class="block__img" alt="" src="${hasImg ? b.img : ''}">
-          <button class="block__imgremove" title="Remove image">✕</button>
-        </div>
-        <div class="block__body" contenteditable="true" spellcheck="false">${esc(b.body)}</div>
-        <button class="block__addimg" title="Add image to this box">+ Add Image</button>
-      </div>
-    `;
+  function renderGame(){
+    gameClockDisplay.textContent = fmt(Math.max(gameRemaining,0));
+    gameClockLabelUnder.textContent = timerLabel.value || 'Switch to next game';
+    let state = 'idle';
+    if (gameRemaining <= 0) state = 'live';
+    else if (gameRunning) state = 'running';
+    gameClockWrap.dataset.state = state;
+    gameStatusDot.dataset.state = state;
+    gameStatusDot.textContent = state === 'live' ? 'Switch now' : (state === 'running' ? 'Running' : 'Idle');
+    gameClockDisplay.classList.toggle('clock-display--live', state === 'live');
   }
 
-  function renderMat(container, data){
-    const colsHtml = data.columns.map(col => `
-      <div class="daycol">
-        <div class="daycol__day" contenteditable="true" spellcheck="false">${esc(col.day)}</div>
-        <div class="daycol__subtitle" contenteditable="true" spellcheck="false">${esc(col.subtitle)}</div>
-        <div class="daycol__blocks">
-          ${col.blocks.map(blockHtml).join('')}
-        </div>
-        <button class="daycol__addbtn">+ Add Box</button>
-      </div>
-    `).join('');
-
-    container.innerHTML = `
-      <div class="corner corner--tl"></div>
-      <div class="corner corner--tr"></div>
-      <div class="corner corner--bl"></div>
-      <div class="corner corner--br"></div>
-      <div class="top-tab"></div>
-      <div class="top-tab__line top-tab__line--l"></div>
-      <div class="top-tab__line top-tab__line--r"></div>
-
-      <div class="mat__header">
-        <div class="badge">
-          <svg width="30" height="30" viewBox="0 0 24 24" class="icon-svg" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 20V6M12 6l-5 5M12 6l5 5"/>
-          </svg>
-        </div>
-        <div class="mat-meta" contenteditable="true" spellcheck="false">${esc(data.meta)}</div>
-        <h2 class="mat-title" contenteditable="true" spellcheck="false">${esc(data.title)}</h2>
-      </div>
-
-      <div class="matgrid">${colsHtml}</div>
-    `;
+  function beep(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.08;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + 0.35);
+    }catch(e){}
   }
 
-  const matBlueprint = document.getElementById('mat-blueprint');
-  const matRelease = document.getElementById('mat-release');
-  renderMat(matBlueprint, blueprintData);
-  renderMat(matRelease, releaseData);
+  function gameTick(){
+    gameRemaining -= 1;
+    if (gameRemaining <= 0){
+      gameRemaining = 0;
+      clearInterval(gameIntervalId); gameIntervalId = null; gameRunning = false;
+      beep();
+    }
+    renderGame();
+  }
 
-  // ---------- add / remove boxes, add / remove images (event delegation) ----------
-  function triggerImagePick(block){
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.addEventListener('change', () => {
-      const file = input.files && input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const imgwrap = block.querySelector('.block__imgwrap');
-        const img = block.querySelector('.block__img');
-        img.src = ev.target.result;
-        imgwrap.dataset.has = 'true';
-        scheduleSave();
-      };
-      reader.readAsDataURL(file);
+  function readDurationInputs(){
+    const m = Math.max(0, parseInt(minInput.value || '0', 10));
+    const s = Math.min(59, Math.max(0, parseInt(secInput.value || '0', 10)));
+    return m*60 + s;
+  }
+
+  startBtn.addEventListener('click', () => {
+    if (gameRunning) return;
+    if (gameRemaining <= 0){ gameRemaining = readDurationInputs(); }
+    gameRunning = true;
+    gameIntervalId = setInterval(gameTick, 1000);
+    renderGame();
+  });
+  pauseBtn.addEventListener('click', () => {
+    gameRunning = false;
+    if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
+    renderGame();
+  });
+  resetTimerBtn.addEventListener('click', () => {
+    gameRunning = false;
+    if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
+    gameRemaining = readDurationInputs();
+    renderGame();
+  });
+  [minInput, secInput].forEach(el => {
+    el.addEventListener('change', () => {
+      if (!gameRunning){ gameRemaining = readDurationInputs(); renderGame(); }
     });
-    input.click();
-  }
+  });
+  document.querySelectorAll('.chip[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mins = parseInt(btn.dataset.preset, 10);
+      minInput.value = mins; secInput.value = 0;
+      if (!gameRunning){ gameRemaining = mins*60; renderGame(); }
+    });
+  });
+  timerLabel.addEventListener('input', renderGame);
+  renderGame();
 
-  document.getElementById('scaleWrapper').addEventListener('click', (e) => {
-    if (e.target.classList.contains('block__remove')){
-      e.target.closest('.block').remove();
-      scheduleSave();
-    } else if (e.target.classList.contains('daycol__addbtn')){
-      const blocksWrap = e.target.previousElementSibling;
-      const wrapper = document.createElement('div');
-      wrapper.innerHTML = blockHtml({label:'NEW BOX', body:'Click to edit'});
-      blocksWrap.appendChild(wrapper.firstElementChild);
-      scheduleSave();
-    } else if (e.target.classList.contains('block__addimg')){
-      triggerImagePick(e.target.closest('.block'));
-    } else if (e.target.classList.contains('block__imgremove')){
-      const block = e.target.closest('.block');
-      const imgwrap = block.querySelector('.block__imgwrap');
-      const img = block.querySelector('.block__img');
-      img.src = '';
-      imgwrap.dataset.has = 'false';
-      scheduleSave();
+  // ---------- Stream stopwatch ----------
+  const streamClockDisplay = document.getElementById('streamClockDisplay');
+  const streamClockWrap = document.getElementById('streamClockWrap');
+  const streamStatusDot = document.getElementById('streamStatusDot');
+  const streamStartBtn = document.getElementById('streamStartBtn');
+  const streamPauseBtn = document.getElementById('streamPauseBtn');
+  const streamResetBtn = document.getElementById('streamResetBtn');
+  const logClockBadge = document.getElementById('logClockBadge');
+
+  let streamElapsed = 0;
+  let streamIntervalId = null;
+  let streamRunning = false;
+
+  function renderStream(){
+    const text = fmtLong(streamElapsed);
+    streamClockDisplay.textContent = text;
+    logClockBadge.textContent = text;
+    const state = streamRunning ? 'onair' : 'idle';
+    streamClockWrap.dataset.state = state;
+    streamStatusDot.dataset.state = state;
+    streamStatusDot.textContent = streamRunning ? 'On air' : 'Off air';
+    streamClockDisplay.classList.toggle('clock-display--live', streamRunning);
+  }
+  function streamTick(){ streamElapsed += 1; renderStream(); }
+
+  streamStartBtn.addEventListener('click', () => {
+    if (streamRunning) return;
+    streamRunning = true;
+    streamIntervalId = setInterval(streamTick, 1000);
+    renderStream();
+  });
+  streamPauseBtn.addEventListener('click', () => {
+    streamRunning = false;
+    if (streamIntervalId){ clearInterval(streamIntervalId); streamIntervalId = null; }
+    renderStream();
+  });
+  streamResetBtn.addEventListener('click', () => {
+    if (streamRunning || streamElapsed > 0){
+      if (!confirm('Reset the stream timer to 00:00:00?')) return;
+    }
+    streamRunning = false;
+    if (streamIntervalId){ clearInterval(streamIntervalId); streamIntervalId = null; }
+    streamElapsed = 0;
+    renderStream();
+  });
+  renderStream();
+
+  // ---------- Notes ----------
+  const noteInput = document.getElementById('noteInput');
+  const logBtn = document.getElementById('logBtn');
+  const markBtn = document.getElementById('markBtn');
+  const logList = document.getElementById('logList');
+  const logEmpty = document.getElementById('logEmpty');
+  const exportBtn = document.getElementById('exportBtn');
+  const clearLogBtn = document.getElementById('clearLogBtn');
+
+  let entries = [];
+
+  function renderLog(){
+    logList.innerHTML = '';
+    logEmpty.style.display = entries.length ? 'none' : 'block';
+    entries.forEach((entry, idx) => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span class="log-list__time">${entry.time}</span>
+        <span class="log-list__note">${entry.note}</span>
+        <button class="log-list__del" data-idx="${idx}" aria-label="Delete entry">✕</button>
+      `;
+      logList.appendChild(li);
+    });
+    logList.scrollTop = logList.scrollHeight;
+  }
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function addEntry(noteText){
+    entries.push({
+      time: fmtLong(streamElapsed),
+      note: noteText ? escapeHtml(noteText) : '<em style="color:var(--mist)">Timestamp marker</em>'
+    });
+    renderLog();
+  }
+  function addNote(){
+    const val = noteInput.value.trim();
+    addEntry(val);
+    noteInput.value = '';
+  }
+  logBtn.addEventListener('click', addNote);
+  noteInput.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ addNote(); } });
+  markBtn.addEventListener('click', () => addEntry(''));
+  logList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('log-list__del')){
+      const idx = parseInt(e.target.dataset.idx, 10);
+      entries.splice(idx, 1);
+      renderLog();
     }
   });
-
-  // contenteditable text edits
-  document.getElementById('scaleWrapper').addEventListener('input', () => {
-    scheduleSave();
-  });
-
-  // ---------- tab switching ----------
-  const tabs = document.querySelectorAll('.tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.dataset.active = 'false');
-      tab.dataset.active = 'true';
-      const target = tab.dataset.mat;
-      matBlueprint.dataset.hidden = target === 'blueprint' ? 'false' : 'true';
-      matRelease.dataset.hidden = target === 'release' ? 'false' : 'true';
-      fitScale();
+  exportBtn.addEventListener('click', () => {
+    if (!entries.length){ alert('Nothing to export yet — log a note first.'); return; }
+    const now = new Date();
+    const stamp = now.toISOString().slice(0,10);
+    let text = `Stream Session Log — ${now.toLocaleString()}\n`;
+    text += '='.repeat(40) + '\n\n';
+    entries.forEach(e => {
+      const plainNote = e.note.includes('Timestamp marker') ? '(marker)' : e.note;
+      text += `[${e.time}]  ${plainNote}\n`;
     });
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `stream-log-${stamp}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   });
-
-  // ---------- scale-to-fit ----------
-  const scaleWrapper = document.getElementById('scaleWrapper');
-  function activeMat(){
-    return matBlueprint.dataset.hidden === 'false' ? matBlueprint : matRelease;
-  }
-  function fitScale(){
-    const mat = activeMat();
-    const wrapperWidth = scaleWrapper.clientWidth || 1600;
-    const scale = Math.min(1, wrapperWidth / 1600);
-    mat.style.transform = `scale(${scale})`;
-    scaleWrapper.style.height = (900 * scale) + 'px';
-  }
-  window.addEventListener('resize', fitScale);
-  fitScale();
+  clearLogBtn.addEventListener('click', () => {
+    if (!entries.length) return;
+    if (confirm('Clear the whole session log? This can\'t be undone.')){ entries = []; renderLog(); }
+  });
+  renderLog();
 
   // ---------- palette ----------
   const PRESETS = [
@@ -484,7 +613,6 @@
     const num = parseInt(hex, 16);
     return [ (num>>16)&255, (num>>8)&255, num&255 ];
   }
-
   function applyPalette(hex, fromSwatch){
     const [r,g,b] = hexToRgb(hex);
     const root = document.documentElement.style;
@@ -496,9 +624,7 @@
     document.querySelectorAll('.swatch').forEach(s => {
       s.dataset.active = (fromSwatch && s.dataset.hex === hex) ? 'true' : 'false';
     });
-    scheduleSave();
   }
-
   PRESETS.forEach((p, i) => {
     const btn = document.createElement('button');
     btn.className = 'swatch';
@@ -509,95 +635,7 @@
     btn.addEventListener('click', () => applyPalette(p.hex, true));
     swatchesEl.appendChild(btn);
   });
-
   customColorEl.addEventListener('input', (e) => applyPalette(e.target.value, false));
-
-  // ---------- export ----------
-  document.getElementById('exportBtn').addEventListener('click', async () => {
-    const mat = activeMat();
-    const prevTransform = mat.style.transform;
-    mat.style.transform = 'none';
-    mat.classList.add('exporting');
-    await new Promise(r => requestAnimationFrame(r));
-    try{
-      if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const canvas = await html2canvas(mat, { backgroundColor:'#0a0a0c', scale:1.2, useCORS:true });
-      const link = document.createElement('a');
-      link.download = (mat.dataset.matname || 'planning-mat') + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }catch(e){
-      alert('Export failed — as a fallback, you can take a screenshot of the mat. (' + e.message + ')');
-    }finally{
-      mat.classList.remove('exporting');
-      mat.style.transform = prevTransform;
-      fitScale();
-    }
-  });
-
-  // ---------- persistence (localStorage — works once hosted outside claude.ai) ----------
-  const STORAGE_KEYS = { blueprint:'cpm-blueprint-v1', release:'cpm-release-v1', palette:'cpm-palette-v1' };
-  let saveTimer = null;
-
-  function serializeMat(container){
-    const title = container.querySelector('.mat-title').innerText.trim();
-    const meta = container.querySelector('.mat-meta').innerText.trim();
-    const columns = [...container.querySelectorAll('.daycol')].map(col => {
-      const day = col.querySelector('.daycol__day').innerText.trim();
-      const subtitle = col.querySelector('.daycol__subtitle').innerText.trim();
-      const blocks = [...col.querySelectorAll('.block')].map(b => {
-        const label = b.querySelector('.block__label').innerText.trim();
-        const body = b.querySelector('.block__body').innerText.trim();
-        const imgwrap = b.querySelector('.block__imgwrap');
-        const img = b.querySelector('.block__img');
-        const hasImg = imgwrap.dataset.has === 'true' && img.src && img.src.startsWith('data:');
-        return { label, body, img: hasImg ? img.src : null };
-      });
-      return { day, subtitle, blocks };
-    });
-    return { title, meta, columns };
-  }
-
-  function saveAll(){
-    try{
-      localStorage.setItem(STORAGE_KEYS.blueprint, JSON.stringify(serializeMat(matBlueprint)));
-      localStorage.setItem(STORAGE_KEYS.release, JSON.stringify(serializeMat(matRelease)));
-      localStorage.setItem(STORAGE_KEYS.palette, document.documentElement.style.getPropertyValue('--red') || '#e21f2d');
-    }catch(e){
-      console.warn('Could not save to localStorage (private browsing or storage full?):', e);
-    }
-  }
-
-  function scheduleSave(){
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveAll, 500);
-  }
-
-  function loadAll(){
-    let bp = null, rel = null, palette = null;
-    try{ bp = JSON.parse(localStorage.getItem(STORAGE_KEYS.blueprint)); }catch(e){}
-    try{ rel = JSON.parse(localStorage.getItem(STORAGE_KEYS.release)); }catch(e){}
-    try{ palette = localStorage.getItem(STORAGE_KEYS.palette); }catch(e){}
-    renderMat(matBlueprint, bp || blueprintData);
-    renderMat(matRelease, rel || releaseData);
-    if (palette) applyPalette(palette, false);
-    fitScale();
-  }
-
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    if (!confirm('Reset both mats and the palette back to the original defaults? This clears anything saved in this browser.')) return;
-    try{
-      localStorage.removeItem(STORAGE_KEYS.blueprint);
-      localStorage.removeItem(STORAGE_KEYS.release);
-      localStorage.removeItem(STORAGE_KEYS.palette);
-    }catch(e){}
-    renderMat(matBlueprint, blueprintData);
-    renderMat(matRelease, releaseData);
-    applyPalette('#e21f2d', true);
-    fitScale();
-  });
-
-  loadAll();
 </script>
 </body>
 </html>
