@@ -236,6 +236,7 @@
     </div>
 
     <div class="spacer"></div>
+    <button class="export-btn" id="resetBtn" style="background:transparent;color:var(--mist);border-color:#2c2c31;">Reset to Default</button>
     <button class="export-btn" id="exportBtn">Export PNG (16:9)</button>
   </div>
 
@@ -328,16 +329,22 @@
     ]
   };
 
+  function esc(str){
+    return String(str == null ? '' : str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
   function blockHtml(b){
+    const hasImg = !!b.img;
     return `
       <div class="block">
         <button class="block__remove" title="Remove box">✕</button>
-        <div class="block__label" contenteditable="true" spellcheck="false">${b.label}</div>
-        <div class="block__imgwrap" data-has="false">
-          <img class="block__img" alt="">
+        <div class="block__label" contenteditable="true" spellcheck="false">${esc(b.label)}</div>
+        <div class="block__imgwrap" data-has="${hasImg}">
+          <img class="block__img" alt="" src="${hasImg ? b.img : ''}">
           <button class="block__imgremove" title="Remove image">✕</button>
         </div>
-        <div class="block__body" contenteditable="true" spellcheck="false">${b.body}</div>
+        <div class="block__body" contenteditable="true" spellcheck="false">${esc(b.body)}</div>
         <button class="block__addimg" title="Add image to this box">+ Add Image</button>
       </div>
     `;
@@ -346,8 +353,8 @@
   function renderMat(container, data){
     const colsHtml = data.columns.map(col => `
       <div class="daycol">
-        <div class="daycol__day" contenteditable="true" spellcheck="false">${col.day}</div>
-        <div class="daycol__subtitle" contenteditable="true" spellcheck="false">${col.subtitle}</div>
+        <div class="daycol__day" contenteditable="true" spellcheck="false">${esc(col.day)}</div>
+        <div class="daycol__subtitle" contenteditable="true" spellcheck="false">${esc(col.subtitle)}</div>
         <div class="daycol__blocks">
           ${col.blocks.map(blockHtml).join('')}
         </div>
@@ -370,8 +377,8 @@
             <path d="M12 20V6M12 6l-5 5M12 6l5 5"/>
           </svg>
         </div>
-        <div class="mat-meta" contenteditable="true" spellcheck="false">${data.meta}</div>
-        <h2 class="mat-title" contenteditable="true" spellcheck="false">${data.title}</h2>
+        <div class="mat-meta" contenteditable="true" spellcheck="false">${esc(data.meta)}</div>
+        <h2 class="mat-title" contenteditable="true" spellcheck="false">${esc(data.title)}</h2>
       </div>
 
       <div class="matgrid">${colsHtml}</div>
@@ -397,6 +404,7 @@
         const img = block.querySelector('.block__img');
         img.src = ev.target.result;
         imgwrap.dataset.has = 'true';
+        scheduleSave();
       };
       reader.readAsDataURL(file);
     });
@@ -406,11 +414,13 @@
   document.getElementById('scaleWrapper').addEventListener('click', (e) => {
     if (e.target.classList.contains('block__remove')){
       e.target.closest('.block').remove();
+      scheduleSave();
     } else if (e.target.classList.contains('daycol__addbtn')){
       const blocksWrap = e.target.previousElementSibling;
       const wrapper = document.createElement('div');
       wrapper.innerHTML = blockHtml({label:'NEW BOX', body:'Click to edit'});
       blocksWrap.appendChild(wrapper.firstElementChild);
+      scheduleSave();
     } else if (e.target.classList.contains('block__addimg')){
       triggerImagePick(e.target.closest('.block'));
     } else if (e.target.classList.contains('block__imgremove')){
@@ -419,7 +429,13 @@
       const img = block.querySelector('.block__img');
       img.src = '';
       imgwrap.dataset.has = 'false';
+      scheduleSave();
     }
+  });
+
+  // contenteditable text edits
+  document.getElementById('scaleWrapper').addEventListener('input', () => {
+    scheduleSave();
   });
 
   // ---------- tab switching ----------
@@ -480,6 +496,7 @@
     document.querySelectorAll('.swatch').forEach(s => {
       s.dataset.active = (fromSwatch && s.dataset.hex === hex) ? 'true' : 'false';
     });
+    scheduleSave();
   }
 
   PRESETS.forEach((p, i) => {
@@ -517,6 +534,70 @@
       fitScale();
     }
   });
+
+  // ---------- persistence (localStorage — works once hosted outside claude.ai) ----------
+  const STORAGE_KEYS = { blueprint:'cpm-blueprint-v1', release:'cpm-release-v1', palette:'cpm-palette-v1' };
+  let saveTimer = null;
+
+  function serializeMat(container){
+    const title = container.querySelector('.mat-title').innerText.trim();
+    const meta = container.querySelector('.mat-meta').innerText.trim();
+    const columns = [...container.querySelectorAll('.daycol')].map(col => {
+      const day = col.querySelector('.daycol__day').innerText.trim();
+      const subtitle = col.querySelector('.daycol__subtitle').innerText.trim();
+      const blocks = [...col.querySelectorAll('.block')].map(b => {
+        const label = b.querySelector('.block__label').innerText.trim();
+        const body = b.querySelector('.block__body').innerText.trim();
+        const imgwrap = b.querySelector('.block__imgwrap');
+        const img = b.querySelector('.block__img');
+        const hasImg = imgwrap.dataset.has === 'true' && img.src && img.src.startsWith('data:');
+        return { label, body, img: hasImg ? img.src : null };
+      });
+      return { day, subtitle, blocks };
+    });
+    return { title, meta, columns };
+  }
+
+  function saveAll(){
+    try{
+      localStorage.setItem(STORAGE_KEYS.blueprint, JSON.stringify(serializeMat(matBlueprint)));
+      localStorage.setItem(STORAGE_KEYS.release, JSON.stringify(serializeMat(matRelease)));
+      localStorage.setItem(STORAGE_KEYS.palette, document.documentElement.style.getPropertyValue('--red') || '#e21f2d');
+    }catch(e){
+      console.warn('Could not save to localStorage (private browsing or storage full?):', e);
+    }
+  }
+
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveAll, 500);
+  }
+
+  function loadAll(){
+    let bp = null, rel = null, palette = null;
+    try{ bp = JSON.parse(localStorage.getItem(STORAGE_KEYS.blueprint)); }catch(e){}
+    try{ rel = JSON.parse(localStorage.getItem(STORAGE_KEYS.release)); }catch(e){}
+    try{ palette = localStorage.getItem(STORAGE_KEYS.palette); }catch(e){}
+    renderMat(matBlueprint, bp || blueprintData);
+    renderMat(matRelease, rel || releaseData);
+    if (palette) applyPalette(palette, false);
+    fitScale();
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (!confirm('Reset both mats and the palette back to the original defaults? This clears anything saved in this browser.')) return;
+    try{
+      localStorage.removeItem(STORAGE_KEYS.blueprint);
+      localStorage.removeItem(STORAGE_KEYS.release);
+      localStorage.removeItem(STORAGE_KEYS.palette);
+    }catch(e){}
+    renderMat(matBlueprint, blueprintData);
+    renderMat(matRelease, releaseData);
+    applyPalette('#e21f2d', true);
+    fitScale();
+  });
+
+  loadAll();
 </script>
 </body>
 </html>
