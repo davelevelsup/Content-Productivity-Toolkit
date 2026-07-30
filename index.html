@@ -196,6 +196,7 @@
   /* ---------- Stream timeline ---------- */
   .streambay{ display:flex; flex-direction:column; gap:20px; }
   .streamclock-row{ display:flex; gap:24px; flex-wrap:wrap; align-items:center; }
+  .sync-row{ background:var(--void); border:1px dashed var(--hairline); border-radius:6px; padding:10px 14px; }
 
   .log-capture{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
   .log-capture input[type="text"]{ flex:1; min-width:200px; }
@@ -333,6 +334,14 @@
           </div>
         </div>
 
+        <div class="sync-row">
+          <label class="small-label" for="syncInput">Sync to actual stream time (hh:mm:ss, from Twitch/YouTube/OBS)</label>
+          <div class="chip-row">
+            <input type="text" id="syncInput" placeholder="01:32:07" class="duration-input" style="width:100px;">
+            <button id="syncBtn">Sync</button>
+          </div>
+        </div>
+
         <div>
           <div class="section-head" style="margin-bottom:10px;">
             <div>
@@ -387,7 +396,9 @@
   const pauseBtn = document.getElementById('pauseBtn');
   const resetTimerBtn = document.getElementById('resetTimerBtn');
 
-  let gameRemaining = 300;
+  let gameDuration = 300;      // total seconds for the current cue
+  let gameElapsedBase = 0;     // seconds banked from prior run segments
+  let gameRunStart = null;     // Date.now() when the current run segment began
   let gameIntervalId = null;
   let gameRunning = false;
   let audioCtx = null;
@@ -404,16 +415,30 @@
     return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
   }
 
+  function gameElapsedNow(){
+    if (gameRunning && gameRunStart){
+      return gameElapsedBase + Math.floor((Date.now() - gameRunStart) / 1000);
+    }
+    return gameElapsedBase;
+  }
+
   function renderGame(){
-    gameClockDisplay.textContent = fmt(Math.max(gameRemaining,0));
+    const remaining = Math.max(gameDuration - gameElapsedNow(), 0);
+    gameClockDisplay.textContent = fmt(remaining);
     gameClockLabelUnder.textContent = timerLabel.value || 'Switch to next game';
     let state = 'idle';
-    if (gameRemaining <= 0) state = 'live';
+    if (remaining <= 0) state = 'live';
     else if (gameRunning) state = 'running';
     gameClockWrap.dataset.state = state;
     gameStatusDot.dataset.state = state;
     gameStatusDot.textContent = state === 'live' ? 'Switch now' : (state === 'running' ? 'Running' : 'Idle');
     gameClockDisplay.classList.toggle('clock-display--live', state === 'live');
+
+    if (remaining <= 0 && gameRunning){
+      gameRunning = false;
+      if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
+      beep();
+    }
   }
 
   function beep(){
@@ -427,16 +452,6 @@
     }catch(e){}
   }
 
-  function gameTick(){
-    gameRemaining -= 1;
-    if (gameRemaining <= 0){
-      gameRemaining = 0;
-      clearInterval(gameIntervalId); gameIntervalId = null; gameRunning = false;
-      beep();
-    }
-    renderGame();
-  }
-
   function readDurationInputs(){
     const m = Math.max(0, parseInt(minInput.value || '0', 10));
     const s = Math.min(59, Math.max(0, parseInt(secInput.value || '0', 10)));
@@ -445,32 +460,48 @@
 
   startBtn.addEventListener('click', () => {
     if (gameRunning) return;
-    if (gameRemaining <= 0){ gameRemaining = readDurationInputs(); }
+    if (gameElapsedBase >= gameDuration){
+      gameDuration = readDurationInputs();
+      gameElapsedBase = 0;
+    }
     gameRunning = true;
-    gameIntervalId = setInterval(gameTick, 1000);
+    gameRunStart = Date.now();
+    gameIntervalId = setInterval(renderGame, 250);
     renderGame();
   });
   pauseBtn.addEventListener('click', () => {
+    if (gameRunning){ gameElapsedBase = gameElapsedNow(); }
     gameRunning = false;
+    gameRunStart = null;
     if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
     renderGame();
   });
   resetTimerBtn.addEventListener('click', () => {
     gameRunning = false;
+    gameRunStart = null;
     if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
-    gameRemaining = readDurationInputs();
+    gameDuration = readDurationInputs();
+    gameElapsedBase = 0;
     renderGame();
   });
   [minInput, secInput].forEach(el => {
     el.addEventListener('change', () => {
-      if (!gameRunning){ gameRemaining = readDurationInputs(); renderGame(); }
+      if (!gameRunning){
+        gameDuration = readDurationInputs();
+        gameElapsedBase = 0;
+        renderGame();
+      }
     });
   });
   document.querySelectorAll('.chip[data-preset]').forEach(btn => {
     btn.addEventListener('click', () => {
       const mins = parseInt(btn.dataset.preset, 10);
       minInput.value = mins; secInput.value = 0;
-      if (!gameRunning){ gameRemaining = mins*60; renderGame(); }
+      if (!gameRunning){
+        gameDuration = mins*60;
+        gameElapsedBase = 0;
+        renderGame();
+      }
     });
   });
   timerLabel.addEventListener('input', renderGame);
@@ -484,13 +515,23 @@
   const streamPauseBtn = document.getElementById('streamPauseBtn');
   const streamResetBtn = document.getElementById('streamResetBtn');
   const logClockBadge = document.getElementById('logClockBadge');
+  const syncInput = document.getElementById('syncInput');
+  const syncBtn = document.getElementById('syncBtn');
 
-  let streamElapsed = 0;
+  let streamElapsedBase = 0;   // seconds banked from prior run segments
+  let streamRunStart = null;   // Date.now() when the current run segment began
   let streamIntervalId = null;
   let streamRunning = false;
 
+  function streamElapsedNow(){
+    if (streamRunning && streamRunStart){
+      return streamElapsedBase + Math.floor((Date.now() - streamRunStart) / 1000);
+    }
+    return streamElapsedBase;
+  }
+
   function renderStream(){
-    const text = fmtLong(streamElapsed);
+    const text = fmtLong(streamElapsedNow());
     streamClockDisplay.textContent = text;
     logClockBadge.textContent = text;
     const state = streamRunning ? 'onair' : 'idle';
@@ -499,28 +540,58 @@
     streamStatusDot.textContent = streamRunning ? 'On air' : 'Off air';
     streamClockDisplay.classList.toggle('clock-display--live', streamRunning);
   }
-  function streamTick(){ streamElapsed += 1; renderStream(); }
 
   streamStartBtn.addEventListener('click', () => {
     if (streamRunning) return;
     streamRunning = true;
-    streamIntervalId = setInterval(streamTick, 1000);
+    streamRunStart = Date.now();
+    streamIntervalId = setInterval(renderStream, 250);
     renderStream();
   });
   streamPauseBtn.addEventListener('click', () => {
+    if (streamRunning){ streamElapsedBase = streamElapsedNow(); }
     streamRunning = false;
+    streamRunStart = null;
     if (streamIntervalId){ clearInterval(streamIntervalId); streamIntervalId = null; }
     renderStream();
   });
   streamResetBtn.addEventListener('click', () => {
-    if (streamRunning || streamElapsed > 0){
+    if (streamRunning || streamElapsedBase > 0){
       if (!confirm('Reset the stream timer to 00:00:00?')) return;
     }
     streamRunning = false;
+    streamRunStart = null;
     if (streamIntervalId){ clearInterval(streamIntervalId); streamIntervalId = null; }
-    streamElapsed = 0;
+    streamElapsedBase = 0;
     renderStream();
   });
+
+  // ---------- sync to actual stream time ----------
+  function parseClockString(str){
+    const parts = str.trim().split(':').map(p => p.trim());
+    if (!parts.length || parts.some(p => p === '' || isNaN(Number(p)))) return null;
+    let h = 0, m = 0, s = 0;
+    if (parts.length === 3){ [h, m, s] = parts.map(Number); }
+    else if (parts.length === 2){ [m, s] = parts.map(Number); }
+    else if (parts.length === 1){ s = Number(parts[0]); }
+    else return null;
+    if (m > 59 || s > 59 || h < 0 || m < 0 || s < 0) return null;
+    return h*3600 + m*60 + s;
+  }
+
+  syncBtn.addEventListener('click', () => {
+    const seconds = parseClockString(syncInput.value);
+    if (seconds === null){
+      alert('Enter a time like 1:32:07 or 32:07 (matching what your streaming software/platform shows).');
+      return;
+    }
+    streamElapsedBase = seconds;
+    if (streamRunning){ streamRunStart = Date.now(); }
+    renderStream();
+    syncInput.value = '';
+  });
+  syncInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') syncBtn.click(); });
+
   renderStream();
 
   // ---------- Notes ----------
@@ -553,7 +624,7 @@
   }
   function addEntry(noteText){
     entries.push({
-      time: fmtLong(streamElapsed),
+      time: fmtLong(streamElapsedNow()),
       note: noteText ? escapeHtml(noteText) : '<em style="color:var(--mist)">Timestamp marker</em>'
     });
     renderLog();
