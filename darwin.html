@@ -3,261 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DARWIN // Digital Automation Resource with Integrated Networking</title>
+<title>DARWIN // face overlay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bezel:#1b1b1f;
-    --bezel-hi:#2b2b30;
-    --bezel-lo:#0d0d10;
-    --glass:#050a08;
     --phosphor:#4dff91;
     --phosphor-dim:#1f7a4c;
     --phosphor-fog:#d8ffe4;
     --amber:#ffb347;
     --error:#ff5d5d;
-    --panel-bg:#101410;
+    --panel-bg:#0c110d;
     --font-pixel:'Press Start 2P', monospace;
     --font-term:'Share Tech Mono', monospace;
   }
 
   *{box-sizing:border-box;}
   html,body{
-    margin:0; padding:0; height:100%;
+    margin:0; padding:0; width:100%; height:100%;
+    background:transparent; /* nothing behind the face — safe for OBS chroma/alpha capture */
+    overflow:hidden;
+  }
+
+  /* ---------- STAGE: literally just the face, nothing else ---------- */
+  #stage{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
     background:transparent;
+  }
+
+  .face{
     font-family:var(--font-term);
-    color:var(--phosphor-fog);
-    display:flex; align-items:center; justify-content:center;
-    overflow:hidden;
-  }
-
-  /* ---------- MONITOR SHELL ---------- */
-  .monitor{
-    width:min(520px, 96vw);
-    background:linear-gradient(155deg, var(--bezel-hi), var(--bezel) 40%, var(--bezel-lo));
-    border-radius:22px;
-    padding:18px 18px 10px;
-    box-shadow:
-      0 0 0 2px #000 inset,
-      0 18px 40px rgba(0,0,0,.55),
-      0 2px 0 rgba(255,255,255,.05) inset;
-    position:relative;
-  }
-
-  .brand-row{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:2px 6px 10px;
-  }
-  .brand{
-    font-family:var(--font-pixel);
-    font-size:11px;
+    font-size:clamp(34px, 7vw, 64px);
     letter-spacing:1px;
     color:var(--phosphor);
-    text-shadow:0 0 6px var(--phosphor);
-  }
-  .brand small{
-    display:block;
-    font-family:var(--font-term);
-    font-size:9px;
-    color:var(--phosphor-dim);
-    letter-spacing:0;
-    margin-top:3px;
-    text-shadow:none;
-  }
-  .led{
-    width:9px; height:9px; border-radius:50%;
-    background:var(--phosphor);
-    box-shadow:0 0 8px 2px var(--phosphor);
-    animation:ledPulse 2.6s ease-in-out infinite;
-  }
-  .led.off{ background:#3a3a3a; box-shadow:none; animation:none; }
-  @keyframes ledPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
-
-  /* ---------- SCREEN ---------- */
-  .screen-wrap{
-    background:#000;
-    border-radius:14px;
-    padding:10px;
-    box-shadow:0 0 0 3px #000, 0 0 30px rgba(0,0,0,.6) inset;
-  }
-  .screen{
-    position:relative;
-    background:radial-gradient(ellipse at 50% 30%, #0a1710 0%, var(--glass) 70%);
-    border-radius:9px;
-    overflow:hidden;
-    min-height:300px;
-    display:flex;
-    flex-direction:column;
-  }
-  .screen::before{ /* scanlines */
-    content:"";
-    position:absolute; inset:0;
-    background:repeating-linear-gradient(
-      to bottom,
-      rgba(0,0,0,0) 0px,
-      rgba(0,0,0,0) 2px,
-      rgba(0,0,0,.28) 3px
-    );
-    pointer-events:none;
-    z-index:5;
-    mix-blend-mode:multiply;
-  }
-  .screen::after{ /* vignette */
-    content:"";
-    position:absolute; inset:0;
-    box-shadow: inset 0 0 60px 18px rgba(0,0,0,.75);
-    pointer-events:none;
-    z-index:6;
-  }
-  .glitch-flash{
-    position:absolute; inset:0; z-index:7; pointer-events:none;
+    text-shadow:0 0 14px rgba(77,255,145,.9), 0 0 34px rgba(77,255,145,.4);
     opacity:0;
-    background:repeating-linear-gradient(0deg, rgba(255,0,80,.12) 0 2px, rgba(0,255,180,.1) 2px 4px, transparent 4px 6px);
-  }
-  .glitch-flash.active{ animation:glitchBurst .38s steps(2,end) 1; }
-  @keyframes glitchBurst{
-    0%{opacity:0; transform:translate(0,0);}
-    20%{opacity:.9; transform:translate(-3px,1px);}
-    40%{opacity:.7; transform:translate(3px,-2px);}
-    60%{opacity:.85; transform:translate(-2px,0);}
-    80%{opacity:.4; transform:translate(2px,1px);}
-    100%{opacity:0; transform:translate(0,0);}
-  }
-
-  /* ---------- FACE ZONE ---------- */
-  .face-zone{
-    position:relative; z-index:2;
-    height:118px;
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-term);
-    font-size:30px;
-    letter-spacing:1px;
-    color:var(--phosphor);
-    text-shadow:0 0 10px rgba(77,255,145,.85), 0 0 22px rgba(77,255,145,.35);
-    transition:color .2s, text-shadow .2s;
+    transform:scale(.82);
+    transition:opacity .16s ease, transform .16s ease;
     user-select:none;
+    white-space:nowrap;
   }
-  .face-zone.state-error, .face-zone.state-overheating, .face-zone.state-angry{
+  .face.visible{ opacity:1; transform:scale(1); }
+
+  .face.state-error, .face.state-overheating, .face.state-angry{
     color:var(--error);
-    text-shadow:0 0 10px rgba(255,93,93,.85), 0 0 22px rgba(255,93,93,.35);
+    text-shadow:0 0 14px rgba(255,93,93,.9), 0 0 34px rgba(255,93,93,.4);
   }
-  .face-zone.state-glitchy, .face-zone.state-corrupted, .face-zone.state-staticNoise{
+  .face.state-glitchy, .face.state-corrupted, .face.state-staticNoise{
     animation:faceJitter .15s steps(2,end) infinite;
   }
-  .face-zone.state-panic, .face-zone.state-caffeinated{
+  .face.state-panic, .face.state-caffeinated{
     animation:faceShake .12s linear infinite;
   }
   @keyframes faceJitter{
-    0%{transform:translate(0,0);} 50%{transform:translate(1px,-1px) skewX(1deg);} 100%{transform:translate(-1px,1px);}
+    0%{transform:scale(1) translate(0,0);} 50%{transform:scale(1) translate(1px,-1px) skewX(1deg);} 100%{transform:scale(1) translate(-1px,1px);}
   }
   @keyframes faceShake{
-    0%{transform:translate(0,0) rotate(0deg);} 50%{transform:translate(1px,0) rotate(.6deg);} 100%{transform:translate(-1px,0) rotate(-.6deg);}
+    0%{transform:scale(1) translate(0,0) rotate(0deg);} 50%{transform:scale(1) translate(1px,0) rotate(.6deg);} 100%{transform:scale(1) translate(-1px,0) rotate(-.6deg);}
+  }
+  @keyframes facePop{
+    0%{ text-shadow: 2px 0 var(--error), -2px 0 var(--phosphor); }
+    45%{ text-shadow: -2px 0 var(--error), 2px 0 var(--phosphor); }
+    100%{ text-shadow: 0 0 14px rgba(77,255,145,.9), 0 0 34px rgba(77,255,145,.4); }
+  }
+  .face.pop{ animation: facePop .28s ease; }
+
+  @media (prefers-reduced-motion: reduce){
+    .face.state-glitchy, .face.state-corrupted, .face.state-staticNoise,
+    .face.state-panic, .face.state-caffeinated, .face.pop{ animation:none !important; }
   }
 
-  .divider{
-    position:relative; z-index:2;
-    display:flex; align-items:center; gap:8px;
-    padding:0 14px; margin:2px 0 6px;
-  }
-  .divider .line{ flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--phosphor-dim), transparent); }
-  .divider .eyebrow{
-    font-family:var(--font-pixel); font-size:8px; color:var(--phosphor-dim); letter-spacing:2px;
-  }
-
-  /* ---------- DIALOGUE ZONE ---------- */
-  .dialogue-zone{
-    position:relative; z-index:2;
-    flex:1;
-    margin:0 12px 12px;
-    background:rgba(0,10,5,.55);
+  /* ---------- CONFIG (setup only — tucked away, not part of the on-stream overlay) ---------- */
+  #gearBtn{
+    position:fixed; top:10px; right:10px;
+    width:30px; height:30px; border-radius:50%;
+    background:rgba(12,17,13,.55);
     border:1px solid var(--phosphor-dim);
-    border-radius:6px;
-    padding:12px 14px;
-    min-height:88px;
-    max-height:150px;
-    overflow-y:auto;
-    font-size:14px;
-    line-height:1.5;
-  }
-  .dialogue-zone .who{
-    display:block;
-    font-family:var(--font-pixel);
-    font-size:8px;
     color:var(--phosphor-dim);
-    margin-bottom:6px;
-    letter-spacing:1px;
-  }
-  .dialogue-text::after{
-    content:"▋";
-    animation:cursorBlink 1s steps(1) infinite;
-    margin-left:2px;
-    color:var(--phosphor);
-  }
-  @keyframes cursorBlink{ 50%{ opacity:0; } }
-
-  /* ---------- STATUS TICKER ---------- */
-  .ticker-wrap{
-    position:relative; z-index:2;
-    border-top:1px solid var(--phosphor-dim);
-    padding:6px 0;
-    overflow:hidden;
-    white-space:nowrap;
-    background:rgba(0,0,0,.3);
-  }
-  .ticker{
-    display:inline-block;
-    padding-left:100%;
-    font-size:10px;
-    color:var(--phosphor-dim);
-    animation:tickerScroll 18s linear infinite;
-  }
-  @keyframes tickerScroll{ from{ transform:translateX(0);} to{ transform:translateX(-100%);} }
-
-  /* ---------- BOTTOM BEZEL / CONTROLS ---------- */
-  .bottom-bar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:10px 6px 4px;
-  }
-  .vents{ display:flex; gap:3px; }
-  .vents span{ width:3px; height:10px; background:var(--bezel-lo); border-radius:1px; }
-
-  .toggle-btn{
-    font-family:var(--font-pixel);
-    font-size:9px;
-    color:var(--bezel-lo);
-    background:linear-gradient(180deg, var(--phosphor), var(--phosphor-dim));
-    border:none;
-    padding:8px 12px;
-    border-radius:5px;
+    font-size:15px; line-height:1;
     cursor:pointer;
-    letter-spacing:1px;
-    box-shadow:0 2px 0 #0a3d22, 0 0 10px rgba(77,255,145,.4);
-    transition:transform .05s;
+    opacity:.35;
+    transition:opacity .15s;
+    z-index:20;
   }
-  .toggle-btn:active{ transform:translateY(2px); box-shadow:0 0 0 #0a3d22; }
+  #gearBtn:hover{ opacity:1; }
 
-  /* ---------- CONFIG DRAWER ---------- */
-  .drawer{
-    max-height:0;
-    overflow:hidden;
+  #configPanel{
+    position:fixed; top:46px; right:10px;
+    width:260px;
     background:var(--panel-bg);
-    border-radius:10px;
-    margin-top:0;
-    transition:max-height .35s ease, margin-top .35s ease, padding .35s ease;
-    padding:0 14px;
-  }
-  .drawer.open{
-    max-height:640px;
-    margin-top:10px;
-    padding:14px;
     border:1px solid var(--phosphor-dim);
+    border-radius:10px;
+    padding:14px;
+    font-family:var(--font-term);
+    color:var(--phosphor-fog);
+    display:none;
+    z-index:20;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  #configPanel.open{ display:block; }
+  #configPanel h2{
+    font-family:var(--font-pixel); font-size:10px; color:var(--phosphor);
+    margin:0 0 10px; letter-spacing:1px;
   }
   .field{ margin-bottom:12px; }
   .field label{
-    display:block; font-size:10px; color:var(--phosphor-dim);
+    display:block; font-size:8px; color:var(--phosphor-dim);
     text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;
-    font-family:var(--font-pixel); font-size:8px;
+    font-family:var(--font-pixel);
   }
   .field input[type=text], .field select{
     width:100%;
@@ -265,151 +121,112 @@
     border:1px solid var(--phosphor-dim);
     color:var(--phosphor-fog);
     font-family:var(--font-term);
-    font-size:13px;
-    padding:8px 10px;
+    font-size:12px;
+    padding:7px 9px;
     border-radius:4px;
   }
   .field input:focus, .field select:focus{ outline:2px solid var(--phosphor); }
-  .row{ display:flex; gap:10px; }
+  .row{ display:flex; gap:8px; }
   .row .field{ flex:1; }
-
   .switch-row{
     display:flex; align-items:center; justify-content:space-between;
-    padding:8px 0; border-top:1px dashed rgba(77,255,145,.15);
+    padding:7px 0; border-top:1px dashed rgba(77,255,145,.15);
+    font-size:11px;
   }
   .switch-row:first-of-type{ border-top:none; }
   .mini-btn{
     font-family:var(--font-term);
-    font-size:11px;
+    font-size:10px;
     color:var(--phosphor);
     background:transparent;
     border:1px solid var(--phosphor-dim);
-    padding:6px 10px;
+    padding:5px 8px;
     border-radius:4px;
     cursor:pointer;
   }
   .mini-btn.active{ background:var(--phosphor); color:#04150a; }
-  .mini-btn.mic-live{ background:var(--error); color:#2a0000; border-color:var(--error); animation:ledPulse 1s infinite; }
-
-  .status-dot{ width:8px; height:8px; border-radius:50%; background:#3a3a3a; display:inline-block; margin-right:6px; }
+  .mini-btn.mic-live{ background:var(--error); color:#2a0000; border-color:var(--error); }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:#3a3a3a; display:inline-block; margin-right:6px; }
   .status-dot.live{ background:var(--phosphor); box-shadow:0 0 6px var(--phosphor); }
   .status-dot.err{ background:var(--error); box-shadow:0 0 6px var(--error); }
-
-  .test-grid{
-    display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:6px;
-  }
+  .test-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px; }
   .test-grid button{
-    font-family:var(--font-term); font-size:10px;
+    font-family:var(--font-term); font-size:9px;
     background:transparent; color:var(--amber); border:1px dashed var(--amber);
-    border-radius:4px; padding:8px 4px; cursor:pointer;
+    border-radius:4px; padding:7px 3px; cursor:pointer;
   }
-
-  ::-webkit-scrollbar{ width:6px; }
+  .note{ font-size:9px; color:var(--phosphor-dim); margin-top:8px; line-height:1.5; }
+  ::-webkit-scrollbar{ width:5px; }
   ::-webkit-scrollbar-thumb{ background:var(--phosphor-dim); border-radius:3px; }
-
-  @media (prefers-reduced-motion: reduce){
-    .led, .face-zone.state-glitchy, .face-zone.state-corrupted, .face-zone.state-staticNoise,
-    .face-zone.state-panic, .face-zone.state-caffeinated, .ticker, .dialogue-text::after{
-      animation:none !important;
-    }
-  }
 </style>
 </head>
 <body>
 
-<div class="monitor">
+<div id="stage">
+  <div class="face" id="faceEl">( • ᴗ • )</div>
+</div>
 
-  <div class="brand-row">
-    <div class="brand">DARWIN
-      <small>DIGITAL AUTOMATION RESOURCE // INTEGRATED NETWORKING</small>
-    </div>
-    <div class="led" id="powerLed" title="power"></div>
-  </div>
+<button id="gearBtn" title="Darwin setup">⚙</button>
 
-  <div class="screen-wrap">
-    <div class="screen" id="screen">
-      <div class="glitch-flash" id="glitchFlash"></div>
+<div id="configPanel">
+  <h2>DARWIN SETUP</h2>
 
-      <div class="face-zone" id="faceZone">( • ᴗ • )</div>
-
-      <div class="divider"><span class="line"></span><span class="eyebrow">OUTPUT</span><span class="line"></span></div>
-
-      <div class="dialogue-zone" id="dialogueZone">
-        <span class="who" id="dialogueWho">DARWIN // idle</span>
-        <span class="dialogue-text" id="dialogueText">Booting phosphor core... standing by.</span>
-      </div>
-
-      <div class="ticker-wrap">
-        <div class="ticker" id="ticker">PING: 999ms &nbsp;·&nbsp; HAMSTER LOAD: nominal &nbsp;·&nbsp; RAM: mostly vibes &nbsp;·&nbsp; UPTIME: since 1999 (allegedly) &nbsp;·&nbsp; SCANLINES: aligned &nbsp;·&nbsp;</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="bottom-bar">
-    <div class="vents"><span></span><span></span><span></span><span></span><span></span></div>
-    <button class="toggle-btn" id="drawerToggle">CONFIG ▾</button>
-    <div class="vents"><span></span><span></span><span></span><span></span><span></span></div>
-  </div>
-
-  <div class="drawer" id="drawer">
-
-    <div class="row">
-      <div class="field">
-        <label for="prefName">Preferred name</label>
-        <input type="text" id="prefName" placeholder="e.g. Sam" value="friend" maxlength="24">
-      </div>
-      <div class="field">
-        <label for="pronounSelect">Pronouns</label>
-        <select id="pronounSelect">
-          <option value="they">they / them</option>
-          <option value="she">she / her</option>
-          <option value="he">he / him</option>
-          <option value="it">it / its</option>
-          <option value="custom">custom...</option>
-        </select>
-      </div>
-    </div>
-    <div class="field" id="customPronounWrap" style="display:none;">
-      <label for="customPronoun">Custom subject pronoun</label>
-      <input type="text" id="customPronoun" placeholder="e.g. xe" maxlength="16">
-    </div>
-
-    <div class="switch-row">
-      <span>Voice input (mic)</span>
-      <button class="mini-btn" id="micBtn">Enable mic</button>
-    </div>
-    <div class="switch-row">
-      <span>Speak responses aloud</span>
-      <button class="mini-btn active" id="muteBtn">Sound on</button>
-    </div>
-
-    <div class="field" style="margin-top:10px;">
-      <label for="twitchChannel">Twitch channel (no #)</label>
-      <div class="row">
-        <input type="text" id="twitchChannel" placeholder="your_channel_name" style="flex:2;">
-        <button class="mini-btn" id="twitchBtn" style="flex:1;">Connect</button>
-      </div>
-      <div style="margin-top:8px; font-size:11px; color:var(--phosphor-dim);">
-        <span class="status-dot" id="twitchDot"></span><span id="twitchStatus">disconnected</span>
-      </div>
-    </div>
-
+  <div class="row">
     <div class="field">
-      <label>Live test controls</label>
-      <div class="test-grid">
-        <button id="testBark">Force bark</button>
-        <button id="testError">Force error</button>
-        <button id="testQA">Force Q&amp;A</button>
-      </div>
+      <label for="prefName">Preferred name</label>
+      <input type="text" id="prefName" placeholder="e.g. Sam" value="friend" maxlength="24">
     </div>
-
-    <div style="font-size:10px; color:var(--phosphor-dim); margin-top:6px; line-height:1.5;">
-      Note: this build keeps your name/pronouns/channel in memory for this session only (no local storage),
-      so re-enter them after a page refresh. Add your own persistence layer if you fork this for permanent settings.
+    <div class="field">
+      <label for="pronounSelect">Pronouns</label>
+      <select id="pronounSelect">
+        <option value="they">they / them</option>
+        <option value="she">she / her</option>
+        <option value="he">he / him</option>
+        <option value="it">it / its</option>
+        <option value="custom">custom...</option>
+      </select>
     </div>
-
+  </div>
+  <div class="field" id="customPronounWrap" style="display:none;">
+    <label for="customPronoun">Custom subject pronoun</label>
+    <input type="text" id="customPronoun" placeholder="e.g. xe" maxlength="16">
   </div>
 
+  <div class="switch-row">
+    <span>Voice input (mic)</span>
+    <button class="mini-btn" id="micBtn">Enable mic</button>
+  </div>
+  <div class="switch-row">
+    <span>Speak responses aloud</span>
+    <button class="mini-btn active" id="muteBtn">Sound on</button>
+  </div>
+
+  <div class="field" style="margin-top:10px;">
+    <label for="twitchChannel">Twitch channel (no #)</label>
+    <div class="row">
+      <input type="text" id="twitchChannel" placeholder="your_channel_name" style="flex:2;">
+      <button class="mini-btn" id="twitchBtn" style="flex:1;">Connect</button>
+    </div>
+    <div style="margin-top:8px; font-size:10px; color:var(--phosphor-dim);">
+      <span class="status-dot" id="twitchDot"></span><span id="twitchStatus">disconnected</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Live test controls</label>
+    <div class="test-grid">
+      <button id="testBark">Bark</button>
+      <button id="testError">Error</button>
+      <button id="testQA">Q&amp;A</button>
+    </div>
+  </div>
+
+  <div class="note">
+    The face only appears while Darwin is actually speaking, then fades back to nothing — add this page
+    as a transparent Browser Source in OBS. Close this panel before you go live; it's for setup only and
+    isn't part of the on-stream overlay. Name/pronouns/channel live in memory for this session only
+    (no local storage) — re-enter them after a refresh, or wire up your own persistence if you fork this.
+  </div>
 </div>
 
 <script>
@@ -428,7 +245,8 @@
     twitchConnected: false,
     idleTimer: null,
     recognition: null,
-    ws: null
+    ws: null,
+    hideTimer: null
   };
 
   function getPronouns(){
@@ -481,8 +299,8 @@
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
   /* =========================================================
-     2. TEMPLATES  (each returns an unresolved string;
-        {NAME}/{SUBJ}/{OBJ}/{POSS} resolved later at speak-time)
+     2. TEMPLATES (unresolved strings; {NAME}/{SUBJ}/{OBJ}/{POSS}
+        get resolved at speak-time so live config changes apply)
   ========================================================= */
   const TEMPLATES = {
     background: [
@@ -547,13 +365,13 @@
   };
 
   const REACTION_CHAT_TEMPLATES = [
-    (u)=>`Chat, and specifically {CHATTER}, is not okay right now, and honestly? Relatable.`,
-    (u)=>`{CHATTER} just said something and my ${pick(PART)} is still recovering.`,
-    (u)=>`Noted for the record: {CHATTER} has opinions about ${pick(GAME_NOUN)}. Strong ones.`
+    ()=>`Chat, and specifically {CHATTER}, is not okay right now, and honestly? Relatable.`,
+    ()=>`{CHATTER} just said something and my ${pick(PART)} is still recovering.`,
+    ()=>`Noted for the record: {CHATTER} has opinions about ${pick(GAME_NOUN)}. Strong ones.`
   ];
 
   /* =========================================================
-     3. Q&A LIBRARY  (50 handwritten magic-8-ball style lines)
+     3. Q&A LIBRARY (50 handwritten magic-8-ball style lines)
   ========================================================= */
   const QA_LIBRARY = [
     "The static says yes. The static is rarely wrong. Rarely.",
@@ -617,15 +435,13 @@
   ========================================================= */
   const CATEGORIES = ["background","reaction","error","chatter"];
   const TARGET_PER_CATEGORY = 250;
-  let BASE_LIBRARY = [];
+  let BASE_LIBRARY = { background:[], reaction:[], error:[], chatter:[] };
 
   function generateBaseLibrary(){
-    BASE_LIBRARY = [];
     CATEGORIES.forEach(cat=>{
       const seen = new Set();
       const pool = [];
       const templates = TEMPLATES[cat];
-      // oversample: keep generating candidate strings until we have enough unique ones
       let guard = 0;
       while(pool.length < TARGET_PER_CATEGORY && guard < TARGET_PER_CATEGORY * 60){
         guard++;
@@ -633,43 +449,66 @@
         const raw = tmpl();
         if(!seen.has(raw)){
           seen.add(raw);
-          pool.push({text:raw, cat:cat});
+          pool.push(raw);
         }
       }
-      BASE_LIBRARY = BASE_LIBRARY.concat(pool);
+      BASE_LIBRARY[cat] = pool;
     });
-    return BASE_LIBRARY;
   }
   generateBaseLibrary();
 
   /* =========================================================
-     5. ANTI-REPEAT FIFO BUFFERS
+     5. TRUE NO-REPEAT SHUFFLE BAGS
+     Every entry in a library is used exactly once before ANY
+     entry repeats. When a bag empties it reshuffles, and it
+     specifically avoids letting the last-used line become the
+     very next line again (no repeat across the reshuffle seam).
   ========================================================= */
-  function makeFifo(cap){
-    return { items: [], cap: cap,
-      has(i){ return this.items.includes(i); },
-      push(i){ this.items.push(i); if(this.items.length > this.cap) this.items.shift(); }
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function makeBag(items){
+    let deck = shuffle(items.map((_,i)=>i));
+    let lastServed = null;
+    return {
+      next(){
+        if(deck.length === 0){
+          deck = shuffle(items.map((_,i)=>i));
+          if(items.length > 1 && deck[deck.length-1] === lastServed){
+            // swap to guarantee the seam itself doesn't repeat
+            const swapIdx = Math.floor(Math.random()*(deck.length-1));
+            const lastIdx = deck.length-1;
+            [deck[swapIdx], deck[lastIdx]] = [deck[lastIdx], deck[swapIdx]];
+          }
+        }
+        const idx = deck.pop();
+        lastServed = idx;
+        return items[idx];
+      }
     };
   }
-  const baseHistory = makeFifo(Math.min(200, Math.floor(BASE_LIBRARY.length*0.6)));
-  const qaHistory = makeFifo(Math.min(15, QA_LIBRARY.length-1));
 
-  function pickBase(catFilter){
-    let candidates = BASE_LIBRARY.map((_,i)=>i);
-    if(catFilter){ candidates = candidates.filter(i=>BASE_LIBRARY[i].cat===catFilter); }
-    let available = candidates.filter(i=>!baseHistory.has(i));
-    if(available.length === 0) available = candidates;
-    const idx = available[Math.floor(Math.random()*available.length)];
-    baseHistory.push(idx);
-    return personalize(BASE_LIBRARY[idx].text);
+  const baseBags = {
+    background: makeBag(BASE_LIBRARY.background),
+    reaction:   makeBag(BASE_LIBRARY.reaction),
+    error:      makeBag(BASE_LIBRARY.error),
+    chatter:    makeBag(BASE_LIBRARY.chatter)
+  };
+  const qaBag = makeBag(QA_LIBRARY);
+
+  function pickBase(cat){
+    const c = cat && baseBags[cat] ? cat : pick(CATEGORIES);
+    return { text: personalize(baseBags[c].next()), cat: c };
   }
 
   function pickQA(){
-    let available = QA_LIBRARY.map((_,i)=>i).filter(i=>!qaHistory.has(i));
-    if(available.length === 0) available = QA_LIBRARY.map((_,i)=>i);
-    const idx = available[Math.floor(Math.random()*available.length)];
-    qaHistory.push(idx);
-    return personalize(resolveHamsterToken(QA_LIBRARY[idx]));
+    return personalize(resolveHamsterToken(qaBag.next()));
   }
 
   /* =========================================================
@@ -709,68 +548,67 @@
     qa:         ["thinking","matrixVision","suspicious","mindBlown","confused"]
   };
 
-  const faceZone = document.getElementById("faceZone");
-  function setFace(stateKey){
-    faceZone.className = "face-zone state-" + stateKey;
-    faceZone.textContent = EXPRESSIONS[stateKey] || EXPRESSIONS.neutral;
+  const faceEl = document.getElementById("faceEl");
+
+  function setFaceExpression(stateKey){
+    // preserve visibility classes, only swap the state-* class
+    const keep = ["face"];
+    if(faceEl.classList.contains("visible")) keep.push("visible");
+    faceEl.className = keep.join(" ") + " state-" + stateKey;
+    faceEl.textContent = EXPRESSIONS[stateKey] || EXPRESSIONS.neutral;
   }
-  function faceForCategory(cat){
+  function expressionForCategory(cat){
     const opts = CAT_EXPRESSIONS[cat] || CAT_EXPRESSIONS.background;
-    setFace(pick(opts));
+    setFaceExpression(pick(opts));
+  }
+
+  function showFace(){
+    faceEl.classList.add("visible");
+    faceEl.classList.remove("pop");
+    void faceEl.offsetWidth;
+    faceEl.classList.add("pop");
+  }
+  function hideFace(){
+    faceEl.classList.remove("visible");
   }
 
   /* =========================================================
-     7. DIALOGUE + TTS ENGINE
+     7. SPEECH ENGINE — face appears only while actually
+        speaking, then disappears completely (nothing else
+        ever renders on this page).
   ========================================================= */
-  const dialogueText = document.getElementById("dialogueText");
-  const dialogueWho = document.getElementById("dialogueWho");
-  const glitchFlash = document.getElementById("glitchFlash");
-  let typeTimer = null;
+  function speak(text, cat){
+    expressionForCategory(cat);
+    showFace();
+    clearTimeout(state.hideTimer);
 
-  function typewrite(text){
-    clearInterval(typeTimer);
-    dialogueText.textContent = "";
-    let i = 0;
-    typeTimer = setInterval(()=>{
-      dialogueText.textContent = text.slice(0, i+1);
-      i++;
-      if(i >= text.length) clearInterval(typeTimer);
-    }, 16);
-  }
-
-  function speak(text, source){
-    dialogueWho.textContent = "DARWIN // " + source;
-    typewrite(text);
-    triggerGlitchFlash();
     if(!state.muted && "speechSynthesis" in window){
       try{
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(text);
         utter.rate = 1.05;
         utter.pitch = 1.15;
+        utter.onend = ()=>{ hideFace(); };
+        utter.onerror = ()=>{ hideFace(); };
         window.speechSynthesis.speak(utter);
-      }catch(e){ /* TTS unsupported, dialogue box still shows text */ }
+        return;
+      }catch(e){ /* fall through to timed hide below */ }
     }
-  }
-
-  function triggerGlitchFlash(){
-    glitchFlash.classList.remove("active");
-    void glitchFlash.offsetWidth; // restart animation
-    glitchFlash.classList.add("active");
+    // muted or TTS unavailable: keep the face up roughly as long as it would
+    // take to say the line, then let it disappear
+    const estMs = Math.max(1600, Math.min(9000, text.length * 55));
+    state.hideTimer = setTimeout(hideFace, estMs);
   }
 
   function doBark(cat){
-    const text = pickBase(cat);
-    faceForCategory(cat);
-    speak(text, cat);
+    const entry = pickBase(cat);
+    speak(entry.text, entry.cat);
   }
 
-  function doQA(question, source, chatterName){
+  function doQA(question, chatterName){
     let answer = pickQA();
     if(chatterName){ answer = answer.replace(/\{CHATTER\}/g, chatterName); }
-    faceForCategory("qa");
-    const prefix = question ? `"${question.slice(0,60)}" → ` : "";
-    speak(prefix + answer, source || "oracle");
+    speak(answer, "qa");
   }
 
   /* =========================================================
@@ -805,7 +643,7 @@
 
     rec.onresult = (e)=>{
       const transcript = e.results[0][0].transcript;
-      doQA(transcript, "voice");
+      doQA(transcript);
     };
     rec.onend = ()=>{
       state.micOn = false;
@@ -904,16 +742,15 @@
     const isQuestion = /\?\s*$/.test(message) || /\bdarwin\b/i.test(message);
     if(isQuestion){
       const q = message.replace(/darwin/ig, "").trim();
-      doQA(q, "chat: " + username, username);
+      doQA(q, username);
       return;
     }
     const now = Date.now();
     if(REACTION_KEYWORDS.test(message) && now - lastReactionAt > 20000){
       lastReactionAt = now;
-      let text = pick(REACTION_CHAT_TEMPLATES)(username);
+      let text = pick(REACTION_CHAT_TEMPLATES)();
       text = text.replace(/\{CHATTER\}/g, username);
-      faceForCategory("reaction");
-      speak(personalize(text), "reaction: chat");
+      speak(personalize(text), "reaction");
     }
   }
 
@@ -933,11 +770,10 @@
   /* =========================================================
      12. CONFIG PANEL WIRING
   ========================================================= */
-  const drawer = document.getElementById("drawer");
-  const drawerToggle = document.getElementById("drawerToggle");
-  drawerToggle.addEventListener("click", ()=>{
-    const open = drawer.classList.toggle("open");
-    drawerToggle.textContent = open ? "CONFIG ▴" : "CONFIG ▾";
+  const gearBtn = document.getElementById("gearBtn");
+  const configPanel = document.getElementById("configPanel");
+  gearBtn.addEventListener("click", ()=>{
+    configPanel.classList.toggle("open");
   });
 
   const prefNameInput = document.getElementById("prefName");
@@ -957,13 +793,12 @@
   ========================================================= */
   document.getElementById("testBark").addEventListener("click", ()=> doBark(pick(CATEGORIES)));
   document.getElementById("testError").addEventListener("click", ()=> doBark("error"));
-  document.getElementById("testQA").addEventListener("click", ()=> doQA("is this thing on", "test"));
+  document.getElementById("testQA").addEventListener("click", ()=> doQA("is this thing on"));
 
   /* =========================================================
-     14. INIT
+     14. INIT — nothing shows until the first line is spoken
   ========================================================= */
-  setFace("booting");
-  setTimeout(()=>{ setFace("neutral"); speak("Phosphor core stable. Darwin online. Try not to break anything.", "boot"); }, 900);
+  setTimeout(()=>{ doBark("background"); }, 900);
 
 })();
 </script>
