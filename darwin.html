@@ -21,11 +21,11 @@
   *{box-sizing:border-box;}
   html,body{
     margin:0; padding:0; width:100%; height:100%;
-    background:transparent; /* transparent for OBS chroma/alpha capture */
+    background:transparent; /* nothing behind the face — safe for OBS alpha capture */
     overflow:hidden;
   }
 
-  /* ---------- STAGE ---------- */
+  /* ---------- STAGE: literally just the face, nothing else ---------- */
   #stage{
     width:100%; height:100%;
     display:flex; align-items:center; justify-content:center;
@@ -74,7 +74,7 @@
     .face.state-panic, .face.state-caffeinated, .face.pop{ animation:none !important; }
   }
 
-  /* ---------- CONFIG PANEL ---------- */
+  /* ---------- SETUP PANEL (local testing only — not part of the on-stream overlay) ---------- */
   #gearBtn{
     position:fixed; top:10px; right:10px;
     width:30px; height:30px; border-radius:50%;
@@ -91,7 +91,7 @@
 
   #configPanel{
     position:fixed; top:46px; right:10px;
-    width:260px;
+    width:250px;
     background:var(--panel-bg);
     border:1px solid var(--phosphor-dim);
     border-radius:10px;
@@ -109,25 +109,6 @@
     font-family:var(--font-pixel); font-size:10px; color:var(--phosphor);
     margin:0 0 10px; letter-spacing:1px;
   }
-  .field{ margin-bottom:12px; }
-  .field label{
-    display:block; font-size:8px; color:var(--phosphor-dim);
-    text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;
-    font-family:var(--font-pixel);
-  }
-  .field input[type=text], .field select{
-    width:100%;
-    background:#000;
-    border:1px solid var(--phosphor-dim);
-    color:var(--phosphor-fog);
-    font-family:var(--font-term);
-    font-size:12px;
-    padding:7px 9px;
-    border-radius:4px;
-  }
-  .field input:focus, .field select:focus{ outline:2px solid var(--phosphor); }
-  .row{ display:flex; gap:8px; }
-  .row .field{ flex:1; }
   .switch-row{
     display:flex; align-items:center; justify-content:space-between;
     padding:7px 0; border-top:1px dashed rgba(77,255,145,.15);
@@ -156,6 +137,7 @@
     border-radius:4px; padding:7px 3px; cursor:pointer;
   }
   .note{ font-size:9px; color:var(--phosphor-dim); margin-top:8px; line-height:1.5; }
+  .field-label{ font-size:8px; color:var(--phosphor-dim); text-transform:uppercase; letter-spacing:1px; font-family:var(--font-pixel); }
   ::-webkit-scrollbar{ width:5px; }
   ::-webkit-scrollbar-thumb{ background:var(--phosphor-dim); border-radius:3px; }
 </style>
@@ -169,51 +151,23 @@
 <button id="gearBtn" title="Darwin setup">⚙</button>
 
 <div id="configPanel">
-  <h2>DARWIN SETUP</h2>
-
-  <div class="row">
-    <div class="field">
-      <label for="prefName">Preferred name</label>
-      <input type="text" id="prefName" value="Dave" maxlength="24">
-    </div>
-    <div class="field">
-      <label for="pronounSelect">Pronouns</label>
-      <select id="pronounSelect">
-        <option value="he" selected>he / him</option>
-        <option value="they">they / them</option>
-        <option value="she">she / her</option>
-        <option value="it">it / its</option>
-        <option value="custom">custom...</option>
-      </select>
-    </div>
-  </div>
-  <div class="field" id="customPronounWrap" style="display:none;">
-    <label for="customPronoun">Custom subject pronoun</label>
-    <input type="text" id="customPronoun" placeholder="e.g. xe" maxlength="16">
-  </div>
+  <h2>DARWIN // davelevelsup</h2>
 
   <div class="switch-row">
-    <span>Voice input (mic)</span>
-    <button class="mini-btn" id="micBtn">Enable mic</button>
+    <span>Twitch chat</span>
+    <span><span class="status-dot" id="twitchDot"></span><span id="twitchStatus" style="font-size:10px;">connecting...</span></span>
   </div>
+  <div class="switch-row">
+    <button class="mini-btn" id="twitchReconnectBtn" style="width:100%;">Force reconnect</button>
+  </div>
+
   <div class="switch-row">
     <span>Speak responses aloud</span>
     <button class="mini-btn active" id="muteBtn">Sound on</button>
   </div>
 
-  <div class="field" style="margin-top:10px;">
-    <label for="twitchChannel">Twitch channel (no #)</label>
-    <div class="row">
-      <input type="text" id="twitchChannel" placeholder="your_channel_name" style="flex:2;">
-      <button class="mini-btn" id="twitchBtn" style="flex:1;">Connect</button>
-    </div>
-    <div style="margin-top:8px; font-size:10px; color:var(--phosphor-dim);">
-      <span class="status-dot" id="twitchDot"></span><span id="twitchStatus">disconnected</span>
-    </div>
-  </div>
-
-  <div class="field">
-    <label>Live test controls</label>
+  <div style="margin-top:10px;">
+    <div class="field-label">Live test controls</div>
     <div class="test-grid">
       <button id="testBark">Bark</button>
       <button id="testError">Error</button>
@@ -222,7 +176,15 @@
   </div>
 
   <div class="note">
-    Configured for Dave (he/him). The overlay remains completely hidden until triggered by chat, mic, or test buttons, keeping OBS clean.
+    Identity is hardcoded for this deployment: Dave, he/him, #davelevelsup — no setup needed on stream.<br><br>
+    <strong>TTS reliability:</strong> most browsers require one real click/keypress on the page before
+    they'll allow audio to play at all — this page listens for that automatically, so just click
+    anywhere once after it loads (a test button click works fine) and speech will unlock for the rest
+    of the session.<br><br>
+    <strong>OBS Browser Source notes:</strong> nothing here needs clicking to function — Twitch
+    auto-connects and auto-reconnects on its own. In OBS source properties, check "Control audio via
+    OBS" so TTS is routed to a track. Leave "Shutdown source when not visible" unchecked, or the idle
+    timer/Twitch connection resets every time you switch scenes.
   </div>
 </div>
 
@@ -231,19 +193,23 @@
   "use strict";
 
   /* =========================================================
-     0. STATE (Hardcoded to Dave / he/him)
+     0. HARDCODED IDENTITY — single user, no config needed
   ========================================================= */
+  const IDENTITY = {
+    name: "Dave",
+    pronoun: "he",       // he | she | they | it
+    twitchChannel: "davelevelsup"
+  };
+
   const state = {
-    prefName: "Dave",
-    pronoun: "he",
-    customPronoun: "",
     muted: false,
-    micOn: false,
     twitchConnected: false,
+    twitchManualStop: false,
+    reconnectAttempt: 0,
     idleTimer: null,
-    recognition: null,
     ws: null,
-    hideTimer: null
+    hideTimer: null,
+    ttsUnlocked: false
   };
 
   function getPronouns(){
@@ -253,20 +219,15 @@
       he:   {subj:"he",   obj:"him",  poss:"his"},
       it:   {subj:"it",   obj:"it",   poss:"its"}
     };
-    if(state.pronoun === "custom" && state.customPronoun.trim()){
-      const c = state.customPronoun.trim();
-      return {subj:c, obj:c, poss:c+"'s"};
-    }
-    return map[state.pronoun] || map.he;
+    return map[IDENTITY.pronoun] || map.they;
   }
 
   function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 
   function personalize(str){
     const p = getPronouns();
-    const name = state.prefName.trim() || "Dave";
     return str
-      .replace(/\{NAME\}/g, name)
+      .replace(/\{NAME\}/g, IDENTITY.name)
       .replace(/\{SUBJ\}/g, p.subj)
       .replace(/\{SUBJC\}/g, cap(p.subj))
       .replace(/\{OBJ\}/g, p.obj)
@@ -366,8 +327,27 @@
     ()=>`Noted for the record: {CHATTER} has opinions about ${pick(GAME_NOUN)}. Strong ones.`
   ];
 
+  // used when a chatter greets the stream (hi/hello/hey/etc.) — not a question, so no 8-ball here
+  const GREETING_TEMPLATES = [
+    ()=>`Hey {CHATTER}, welcome in — ${pick(HAMSTER)} just did a little wave for you.`,
+    ()=>`{CHATTER}! Good to see you. My ${pick(PART)} perked right up.`,
+    ()=>`Sup {CHATTER}. Grab a seat, my ${pick(PART)} is only mildly on fire today.`,
+    ()=>`Welcome, {CHATTER}. We're running on ${pick(FLAVOR)} vibes and ${pick(HAMSTER)}.`,
+    ()=>`Hey {CHATTER}! Chat just got better and my ${pick(PART)} agrees.`,
+    ()=>`{CHATTER} has entered the building. Deploying ${pick(FLAVOR)} greetings.`
+  ];
+
+  // used when someone addresses/mentions darwin without asking an actual question
+  const MENTION_ACK_TEMPLATES = [
+    ()=>`Heard you, {CHATTER}. My ${pick(PART)} is flattered you noticed.`,
+    ()=>`Noted, {CHATTER}. Filing that under "reasons to stay plugged in."`,
+    ()=>`{CHATTER}, appreciated — ${pick(HAMSTER)} just did a little victory lap.`,
+    ()=>`Copy that, {CHATTER}. My ${pick(PART)} is ${pick(ACTION)} in response.`,
+    ()=>`{CHATTER}, you rang? I was busy being ${pick(FLAVOR)}, but for you, sure.`
+  ];
+
   /* =========================================================
-     3. Q&A LIBRARY
+     3. Q&A LIBRARY (50 handwritten magic-8-ball style lines)
   ========================================================= */
   const QA_LIBRARY = [
     "The static says yes. The static is rarely wrong. Rarely.",
@@ -427,7 +407,7 @@
   }
 
   /* =========================================================
-     4. GENERATE BASE LIBRARY
+     4. GENERATE BASE LIBRARY -> 1000 entries (250 per category)
   ========================================================= */
   const CATEGORIES = ["background","reaction","error","chatter"];
   const TARGET_PER_CATEGORY = 250;
@@ -454,7 +434,9 @@
   generateBaseLibrary();
 
   /* =========================================================
-     5. SHUFFLE BAGS
+     5. TRUE NO-REPEAT SHUFFLE BAGS — every line is used exactly
+        once before ANY line repeats; reshuffling avoids letting
+        the last-used line land first again across the seam.
   ========================================================= */
   function shuffle(arr){
     const a = arr.slice();
@@ -503,35 +485,34 @@
   }
 
   /* =========================================================
-     6. SANITY-PASSED EXPRESSIONS ENGINE (Visually Diverse)
+     6. EXPRESSION ENGINE (24 states)
   ========================================================= */
   const EXPRESSIONS = {
     neutral:        "( • ᴗ • )",
-    happy:          "( ^ ᗜ ^ )",
+    happy:          "( ^ ᴗ ^ )",
     smug:           "( ¬ ‿ ¬ )",
-    glitchy:        "( # Ⓧ _ Ⓧ # )",
-    panic:          "( ⊙ _ ⊙ ; )",
-    sleepy:         "( - . - ) zzz",
-    hype:           "\\ ( ★ ▽ ★ ) /",
-    suspicious:     "( ಠ _ ಠ )",
-    love:           "( ♥ ‿ ♥ )",
-    sad:            "( ； ω ； )",
-    dead:           "( x _ x )",
-    matrixVision:   "01 ( • _ • ) 10",
-    staticNoise:    "▒ ▒ ( - _ - ) ▒ ▒",
-    wink:           "( ^ _ ~ )",
-    laughing:       "( ≧ ▽ ≦ )",
-    angry:          "( ╬ ಠ 益 ಠ )",
-    confused:       "( • _ • ) ?",
-    zen:            "( ˘ ³˘ )",
-    caffeinated:    "( ° Д ° ) ! !",
-    corrupted:      "( # $ % _ # $ % )",
-    booting:        "[ ■ □ □ ] boot",
-    overheating:    "( ´ Д ` ) ° C",
-    thinking:       "( . _ . ) ?",
-    mindBlown:      "( ⊙ ▃ ⊙ )"
+    glitchy:        "(#Ⓧ_Ⓧ#)",
+    panic:          "(⊙_⊙;)",
+    sleepy:         "(-.-) zzz",
+    hype:           "\\(★ω★)/",
+    suspicious:     "( ಠ_ಠ )",
+    love:           "( ♥‿♥ )",
+    sad:            "( ; ω ; )",
+    dead:           "(x_x)",
+    matrixVision:   "01 (•_•) 10",
+    staticNoise:    "▓▓(-_-)▓▓",
+    wink:           "( ^_~ )",
+    laughing:       "(≧▽≦)",
+    angry:          "(╬ಠ益ಠ)",
+    confused:       "( •_• )?",
+    zen:            "( ˘ ³˘)",
+    caffeinated:    "(°Д°)!!",
+    corrupted:      "(#$%_#$%)",
+    booting:        "[■□□] booting",
+    overheating:    "(´Д`)°C°C",
+    thinking:       "( . _ . )?",
+    mindBlown:      "(⊙▃⊙)"
   };
-  
   const CAT_EXPRESSIONS = {
     background: ["neutral","zen","sleepy","thinking","matrixVision"],
     reaction:   ["hype","laughing","mindBlown","suspicious","wink","smug"],
@@ -565,11 +546,65 @@
 
   /* =========================================================
      7. SPEECH ENGINE
+     TTS is the point of this thing, so it gets three layers of
+     defense against the usual reasons it silently fails:
+       a) most browsers require one real user gesture before
+          ANY audio (including speechSynthesis) is allowed to
+          play — we listen for the first click/key/touch and
+          "unlock" audio right then, once, automatically.
+       b) voices load asynchronously in Chrome; calling speak()
+          before they're ready can just do nothing. We cache
+          voices via the voiceschanged event and pick one
+          explicitly instead of leaving it to chance.
+       c) Chrome has a long-standing bug where speechSynthesis
+          silently pauses on long utterances / after the tab
+          sits idle. A small pause()+resume() keepalive while
+          actively speaking works around it.
+     The face-hide itself still runs on its own timer regardless
+     of whether TTS actually plays, so the visual never depends
+     on audio succeeding — but this makes the audio itself much
+     more likely to actually fire.
   ========================================================= */
+  let cachedVoices = [];
+  function loadVoices(){
+    if("speechSynthesis" in window) cachedVoices = window.speechSynthesis.getVoices();
+  }
+  if("speechSynthesis" in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(){
+    if(!cachedVoices.length) return null;
+    return cachedVoices.find(v=>/^en/i.test(v.lang)) || cachedVoices[0];
+  }
+
+  function unlockTTS(){
+    if(state.ttsUnlocked || !("speechSynthesis" in window)) return;
+    state.ttsUnlocked = true;
+    try{
+      const primer = new SpeechSynthesisUtterance(" ");
+      primer.volume = 0;
+      window.speechSynthesis.speak(primer);
+    }catch(e){ /* ignore — worst case first real line unlocks it instead */ }
+  }
+  ["click","keydown","touchstart"].forEach(evt=>{
+    document.addEventListener(evt, unlockTTS, {once:true, passive:true});
+  });
+
+  setInterval(()=>{
+    if("speechSynthesis" in window && window.speechSynthesis.speaking){
+      window.speechSynthesis.pause();
+      window.speechSynthesis.resume();
+    }
+  }, 9000);
+
   function speak(text, cat){
     expressionForCategory(cat);
     showFace();
     clearTimeout(state.hideTimer);
+
+    const estMs = Math.max(1600, Math.min(9000, text.length * 55));
+    state.hideTimer = setTimeout(hideFace, estMs);
 
     if(!state.muted && "speechSynthesis" in window){
       try{
@@ -577,14 +612,13 @@
         const utter = new SpeechSynthesisUtterance(text);
         utter.rate = 1.05;
         utter.pitch = 1.15;
-        utter.onend = ()=>{ hideFace(); };
-        utter.onerror = ()=>{ hideFace(); };
+        const voice = pickVoice();
+        if(voice) utter.voice = voice;
+        utter.onend = ()=>{ clearTimeout(state.hideTimer); hideFace(); };
+        utter.onerror = ()=>{ clearTimeout(state.hideTimer); hideFace(); };
         window.speechSynthesis.speak(utter);
-        return;
-      }catch(e){ /* fall through */ }
+      }catch(e){ /* timer fallback above already covers the visual */ }
     }
-    const estMs = Math.max(1600, Math.min(9000, text.length * 55));
-    state.hideTimer = setTimeout(hideFace, estMs);
   }
 
   function doBark(cat){
@@ -601,65 +635,26 @@
   /* =========================================================
      8. IDLE TIMER (9–15 minutes)
   ========================================================= */
+  function pickIdleCategory(){
+    const roll = Math.random();
+    if(roll < 0.40) return "background";
+    if(roll < 0.70) return "error";
+    if(roll < 0.85) return "chatter";
+    return "reaction";
+  }
+
   function scheduleIdle(){
     const minMs = 9*60*1000, maxMs = 15*60*1000;
     const wait = minMs + Math.random()*(maxMs-minMs);
     state.idleTimer = setTimeout(()=>{
-      const roll = Math.random();
-      const cat = roll < 0.7 ? "background" : pick(CATEGORIES);
-      doBark(cat);
+      doBark(pickIdleCategory());
       scheduleIdle();
     }, wait);
   }
   scheduleIdle();
 
   /* =========================================================
-     9. VOICE INPUT (Web Speech API)
-  ========================================================= */
-  const micBtn = document.getElementById("micBtn");
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if(!SpeechRec){
-    micBtn.textContent = "Mic unsupported";
-    micBtn.disabled = true;
-  } else {
-    const rec = new SpeechRec();
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.lang = "en-US";
-
-    rec.onresult = (e)=>{
-      const transcript = e.results[0][0].transcript;
-      doQA(transcript);
-    };
-    rec.onend = ()=>{
-      state.micOn = false;
-      micBtn.textContent = "Enable mic";
-      micBtn.classList.remove("mic-live");
-    };
-    rec.onerror = ()=>{
-      state.micOn = false;
-      micBtn.textContent = "Enable mic";
-      micBtn.classList.remove("mic-live");
-    };
-    state.recognition = rec;
-
-    micBtn.addEventListener("click", ()=>{
-      if(state.micOn){
-        rec.stop();
-      } else {
-        try{
-          rec.start();
-          state.micOn = true;
-          micBtn.textContent = "Listening...";
-          micBtn.classList.add("mic-live");
-        }catch(e){}
-      }
-    });
-  }
-
-  /* =========================================================
-     10. MUTE TOGGLE
+     9. MUTE TOGGLE
   ========================================================= */
   const muteBtn = document.getElementById("muteBtn");
   muteBtn.addEventListener("click", ()=>{
@@ -670,18 +665,22 @@
   });
 
   /* =========================================================
-     11. TWITCH IRC (WebSocket)
+     11. TWITCH IRC — auto-connects on load, auto-reconnects on
+     drop, with backoff. No clicks required, since OBS Browser
+     Sources normally can't receive them.
   ========================================================= */
-  const twitchBtn = document.getElementById("twitchBtn");
-  const twitchChannelInput = document.getElementById("twitchChannel");
   const twitchDot = document.getElementById("twitchDot");
   const twitchStatus = document.getElementById("twitchStatus");
+  const twitchReconnectBtn = document.getElementById("twitchReconnectBtn");
 
-  let lastReactionAt = 0;
-  const REACTION_KEYWORDS = /\b(lol|lmao|died|rip|gg|clip|no way|what|wtf|insane|clutch)\b/i;
+  const REACTION_KEYWORDS = /\b(lol|lmao|died|rip|gg|clip|no way|wtf|insane|clutch)\b/i;
 
-  function connectTwitch(channel){
+  function connectTwitch(){
     if(state.ws){ try{ state.ws.close(); }catch(e){} }
+    state.twitchManualStop = false;
+    twitchStatus.textContent = "connecting...";
+    twitchDot.className = "status-dot";
+
     const ws = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
     state.ws = ws;
     const anonNick = "justinfan" + Math.floor(10000 + Math.random()*89999);
@@ -690,7 +689,7 @@
       ws.send("CAP REQ :twitch.tv/tags twitch.tv/commands\r\n");
       ws.send("PASS SCHMOOPIIE\r\n");
       ws.send(`NICK ${anonNick}\r\n`);
-      ws.send(`JOIN #${channel.toLowerCase()}\r\n`);
+      ws.send(`JOIN #${IDENTITY.twitchChannel}\r\n`);
     };
 
     ws.onmessage = (evt)=>{
@@ -702,14 +701,13 @@
         }
         if(line.includes("376") || line.toLowerCase().includes("joined")){
           state.twitchConnected = true;
+          state.reconnectAttempt = 0;
           twitchDot.className = "status-dot live";
-          twitchStatus.textContent = "connected to #" + channel;
+          twitchStatus.textContent = "connected to #" + IDENTITY.twitchChannel;
         }
         const m = line.match(/:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)$/);
         if(m){
-          const username = m[1];
-          const message = m[2];
-          handleChatMessage(username, message);
+          handleChatMessage(m[1], m[2]);
         }
       });
     };
@@ -720,60 +718,76 @@
     };
     ws.onclose = ()=>{
       state.twitchConnected = false;
-      twitchDot.className = "status-dot";
+      twitchDot.className = "status-dot err";
       twitchStatus.textContent = "disconnected";
+      if(!state.twitchManualStop){
+        state.reconnectAttempt++;
+        const backoff = Math.min(30000, 3000 * state.reconnectAttempt);
+        setTimeout(connectTwitch, backoff);
+      }
     };
   }
 
+  const GREETING_RE = /^\s*(hi|hello|hey|heya|yo|sup|howdy|good\s?(morning|evening|afternoon)|gm|gn|morning)\b/i;
+  const INTERROGATIVE_RE = /^\s*(who|what|when|where|why|how|is|are|am|can|could|would|will|do|does|did|should|has|have)\b/i;
+  const MENTIONS_DARWIN_RE = /\bdarwin\b/i;
+
+  // classify what a chat line is actually doing, so the 8-ball only
+  // fires for real questions instead of every mention of "darwin"
+  function classifyMessage(message){
+    const m = message.trim();
+    if(!m) return null;
+    const mentionsDarwin = MENTIONS_DARWIN_RE.test(m);
+    const looksLikeQuestion = /\?/.test(m) || INTERROGATIVE_RE.test(m);
+
+    if(looksLikeQuestion && (mentionsDarwin || /\?/.test(m))) return "question";
+    if(GREETING_RE.test(m)) return "greeting";
+    if(mentionsDarwin) return "mention";
+    if(REACTION_KEYWORDS.test(m)) return "reaction";
+    return null;
+  }
+
+  let lastChatReplyAt = 0;
+  const CHAT_REPLY_COOLDOWN = 15000; // keeps busy chat from getting spammed; questions bypass this
+
   function handleChatMessage(username, message){
-    const isQuestion = /\?\s*$/.test(message) || /\bdarwin\b/i.test(message);
-    if(isQuestion){
+    const intent = classifyMessage(message);
+    if(!intent) return;
+
+    if(intent === "question"){
       const q = message.replace(/darwin/ig, "").trim();
       doQA(q, username);
       return;
     }
+
+    // everything else is throttled so Darwin isn't replying to every single line
     const now = Date.now();
-    if(REACTION_KEYWORDS.test(message) && now - lastReactionAt > 20000){
-      lastReactionAt = now;
-      let text = pick(REACTION_CHAT_TEMPLATES)();
-      text = text.replace(/\{CHATTER\}/g, username);
-      speak(personalize(text), "reaction");
-    }
+    if(now - lastChatReplyAt < CHAT_REPLY_COOLDOWN) return;
+    lastChatReplyAt = now;
+
+    let templatePool;
+    let cat;
+    if(intent === "greeting"){ templatePool = GREETING_TEMPLATES; cat = "chatter"; }
+    else if(intent === "mention"){ templatePool = MENTION_ACK_TEMPLATES; cat = "chatter"; }
+    else { templatePool = REACTION_CHAT_TEMPLATES; cat = "reaction"; }
+
+    let text = pick(templatePool)().replace(/\{CHATTER\}/g, username);
+    speak(personalize(text), cat);
   }
 
-  twitchBtn.addEventListener("click", ()=>{
-    const channel = twitchChannelInput.value.trim();
-    if(!channel) return;
-    if(state.twitchConnected){
-      if(state.ws) state.ws.close();
-      twitchBtn.textContent = "Connect";
-      return;
-    }
-    twitchStatus.textContent = "connecting...";
-    connectTwitch(channel);
-    twitchBtn.textContent = "Disconnect";
+  twitchReconnectBtn.addEventListener("click", ()=>{
+    state.reconnectAttempt = 0;
+    connectTwitch();
   });
 
   /* =========================================================
-     12. CONFIG PANEL WIRING
+     12. SETUP PANEL TOGGLE
   ========================================================= */
   const gearBtn = document.getElementById("gearBtn");
   const configPanel = document.getElementById("configPanel");
   gearBtn.addEventListener("click", ()=>{
     configPanel.classList.toggle("open");
   });
-
-  const prefNameInput = document.getElementById("prefName");
-  prefNameInput.addEventListener("input", ()=>{ state.prefName = prefNameInput.value; });
-
-  const pronounSelect = document.getElementById("pronounSelect");
-  const customPronounWrap = document.getElementById("customPronounWrap");
-  const customPronounInput = document.getElementById("customPronoun");
-  pronounSelect.addEventListener("change", ()=>{
-    state.pronoun = pronounSelect.value;
-    customPronounWrap.style.display = state.pronoun === "custom" ? "block" : "none";
-  });
-  customPronounInput.addEventListener("input", ()=>{ state.customPronoun = customPronounInput.value; });
 
   /* =========================================================
      13. LIVE TEST CONTROLS
@@ -783,9 +797,10 @@
   document.getElementById("testQA").addEventListener("click", ()=> doQA("is this thing on"));
 
   /* =========================================================
-     14. INIT (Safe: No auto-speech on load, fully initialized)
+     14. INIT
   ========================================================= */
-  // Initialization complete. Fully ready for OBS or manual triggers.
+  connectTwitch();
+  setTimeout(()=>{ doBark("background"); }, 900);
 
 })();
 </script>
