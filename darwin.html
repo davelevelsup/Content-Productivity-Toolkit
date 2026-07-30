@@ -21,11 +21,11 @@
   *{box-sizing:border-box;}
   html,body{
     margin:0; padding:0; width:100%; height:100%;
-    background:transparent; /* nothing behind the face — safe for OBS chroma/alpha capture */
+    background:transparent; /* transparent for OBS chroma/alpha capture */
     overflow:hidden;
   }
 
-  /* ---------- STAGE: literally just the face, nothing else ---------- */
+  /* ---------- STAGE ---------- */
   #stage{
     width:100%; height:100%;
     display:flex; align-items:center; justify-content:center;
@@ -74,7 +74,7 @@
     .face.state-panic, .face.state-caffeinated, .face.pop{ animation:none !important; }
   }
 
-  /* ---------- CONFIG (setup only — tucked away, not part of the on-stream overlay) ---------- */
+  /* ---------- CONFIG PANEL ---------- */
   #gearBtn{
     position:fixed; top:10px; right:10px;
     width:30px; height:30px; border-radius:50%;
@@ -174,14 +174,14 @@
   <div class="row">
     <div class="field">
       <label for="prefName">Preferred name</label>
-      <input type="text" id="prefName" placeholder="e.g. Sam" value="friend" maxlength="24">
+      <input type="text" id="prefName" value="Dave" maxlength="24">
     </div>
     <div class="field">
       <label for="pronounSelect">Pronouns</label>
       <select id="pronounSelect">
+        <option value="he" selected>he / him</option>
         <option value="they">they / them</option>
         <option value="she">she / her</option>
-        <option value="he">he / him</option>
         <option value="it">it / its</option>
         <option value="custom">custom...</option>
       </select>
@@ -222,10 +222,7 @@
   </div>
 
   <div class="note">
-    The face only appears while Darwin is actually speaking, then fades back to nothing — add this page
-    as a transparent Browser Source in OBS. Close this panel before you go live; it's for setup only and
-    isn't part of the on-stream overlay. Name/pronouns/channel live in memory for this session only
-    (no local storage) — re-enter them after a refresh, or wire up your own persistence if you fork this.
+    Configured for Dave (he/him). The overlay remains completely hidden until triggered by chat, mic, or test buttons, keeping OBS clean.
   </div>
 </div>
 
@@ -234,11 +231,11 @@
   "use strict";
 
   /* =========================================================
-     0. STATE
+     0. STATE (Hardcoded to Dave / he/him)
   ========================================================= */
   const state = {
-    prefName: "friend",
-    pronoun: "they",
+    prefName: "Dave",
+    pronoun: "he",
     customPronoun: "",
     muted: false,
     micOn: false,
@@ -260,14 +257,14 @@
       const c = state.customPronoun.trim();
       return {subj:c, obj:c, poss:c+"'s"};
     }
-    return map[state.pronoun] || map.they;
+    return map[state.pronoun] || map.he;
   }
 
   function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 
   function personalize(str){
     const p = getPronouns();
-    const name = state.prefName.trim() || "friend";
+    const name = state.prefName.trim() || "Dave";
     return str
       .replace(/\{NAME\}/g, name)
       .replace(/\{SUBJ\}/g, p.subj)
@@ -299,8 +296,7 @@
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
   /* =========================================================
-     2. TEMPLATES (unresolved strings; {NAME}/{SUBJ}/{OBJ}/{POSS}
-        get resolved at speak-time so live config changes apply)
+     2. TEMPLATES
   ========================================================= */
   const TEMPLATES = {
     background: [
@@ -371,7 +367,7 @@
   ];
 
   /* =========================================================
-     3. Q&A LIBRARY (50 handwritten magic-8-ball style lines)
+     3. Q&A LIBRARY
   ========================================================= */
   const QA_LIBRARY = [
     "The static says yes. The static is rarely wrong. Rarely.",
@@ -431,7 +427,7 @@
   }
 
   /* =========================================================
-     4. GENERATE BASE LIBRARY -> 1000 entries (250 per category)
+     4. GENERATE BASE LIBRARY
   ========================================================= */
   const CATEGORIES = ["background","reaction","error","chatter"];
   const TARGET_PER_CATEGORY = 250;
@@ -458,11 +454,7 @@
   generateBaseLibrary();
 
   /* =========================================================
-     5. TRUE NO-REPEAT SHUFFLE BAGS
-     Every entry in a library is used exactly once before ANY
-     entry repeats. When a bag empties it reshuffles, and it
-     specifically avoids letting the last-used line become the
-     very next line again (no repeat across the reshuffle seam).
+     5. SHUFFLE BAGS
   ========================================================= */
   function shuffle(arr){
     const a = arr.slice();
@@ -481,7 +473,6 @@
         if(deck.length === 0){
           deck = shuffle(items.map((_,i)=>i));
           if(items.length > 1 && deck[deck.length-1] === lastServed){
-            // swap to guarantee the seam itself doesn't repeat
             const swapIdx = Math.floor(Math.random()*(deck.length-1));
             const lastIdx = deck.length-1;
             [deck[swapIdx], deck[lastIdx]] = [deck[lastIdx], deck[swapIdx]];
@@ -512,34 +503,35 @@
   }
 
   /* =========================================================
-     6. EXPRESSION ENGINE (24 states)
+     6. SANITY-PASSED EXPRESSIONS ENGINE (Visually Diverse)
   ========================================================= */
   const EXPRESSIONS = {
     neutral:        "( • ᴗ • )",
-    happy:          "( ^ ᴗ ^ )",
+    happy:          "( ^ ᗜ ^ )",
     smug:           "( ¬ ‿ ¬ )",
-    glitchy:        "(#Ⓧ_Ⓧ#)",
-    panic:          "(⊙_⊙;)",
-    sleepy:         "(-.-) zzz",
-    hype:           "\\(★ω★)/",
-    suspicious:     "( ಠ_ಠ )",
-    love:           "( ♥‿♥ )",
-    sad:            "( ; ω ; )",
-    dead:           "(x_x)",
-    matrixVision:   "01 (•_•) 10",
-    staticNoise:    "▓▓(-_-)▓▓",
-    wink:           "( ^_~ )",
-    laughing:       "(≧▽≦)",
-    angry:          "(╬ಠ益ಠ)",
-    confused:       "( •_• )?",
-    zen:            "( ˘ ³˘)",
-    caffeinated:    "(°Д°)!!",
-    corrupted:      "(#$%_#$%)",
-    booting:        "[■□□] booting",
-    overheating:    "(´Д`)°C°C",
-    thinking:       "( . _ . )?",
-    mindBlown:      "(⊙▃⊙)"
+    glitchy:        "( # Ⓧ _ Ⓧ # )",
+    panic:          "( ⊙ _ ⊙ ; )",
+    sleepy:         "( - . - ) zzz",
+    hype:           "\\ ( ★ ▽ ★ ) /",
+    suspicious:     "( ಠ _ ಠ )",
+    love:           "( ♥ ‿ ♥ )",
+    sad:            "( ； ω ； )",
+    dead:           "( x _ x )",
+    matrixVision:   "01 ( • _ • ) 10",
+    staticNoise:    "▒ ▒ ( - _ - ) ▒ ▒",
+    wink:           "( ^ _ ~ )",
+    laughing:       "( ≧ ▽ ≦ )",
+    angry:          "( ╬ ಠ 益 ಠ )",
+    confused:       "( • _ • ) ?",
+    zen:            "( ˘ ³˘ )",
+    caffeinated:    "( ° Д ° ) ! !",
+    corrupted:      "( # $ % _ # $ % )",
+    booting:        "[ ■ □ □ ] boot",
+    overheating:    "( ´ Д ` ) ° C",
+    thinking:       "( . _ . ) ?",
+    mindBlown:      "( ⊙ ▃ ⊙ )"
   };
+  
   const CAT_EXPRESSIONS = {
     background: ["neutral","zen","sleepy","thinking","matrixVision"],
     reaction:   ["hype","laughing","mindBlown","suspicious","wink","smug"],
@@ -551,7 +543,6 @@
   const faceEl = document.getElementById("faceEl");
 
   function setFaceExpression(stateKey){
-    // preserve visibility classes, only swap the state-* class
     const keep = ["face"];
     if(faceEl.classList.contains("visible")) keep.push("visible");
     faceEl.className = keep.join(" ") + " state-" + stateKey;
@@ -573,9 +564,7 @@
   }
 
   /* =========================================================
-     7. SPEECH ENGINE — face appears only while actually
-        speaking, then disappears completely (nothing else
-        ever renders on this page).
+     7. SPEECH ENGINE
   ========================================================= */
   function speak(text, cat){
     expressionForCategory(cat);
@@ -592,10 +581,8 @@
         utter.onerror = ()=>{ hideFace(); };
         window.speechSynthesis.speak(utter);
         return;
-      }catch(e){ /* fall through to timed hide below */ }
+      }catch(e){ /* fall through */ }
     }
-    // muted or TTS unavailable: keep the face up roughly as long as it would
-    // take to say the line, then let it disappear
     const estMs = Math.max(1600, Math.min(9000, text.length * 55));
     state.hideTimer = setTimeout(hideFace, estMs);
   }
@@ -666,7 +653,7 @@
           state.micOn = true;
           micBtn.textContent = "Listening...";
           micBtn.classList.add("mic-live");
-        }catch(e){ /* already started */ }
+        }catch(e){}
       }
     });
   }
@@ -683,7 +670,7 @@
   });
 
   /* =========================================================
-     11. TWITCH IRC (client-side WebSocket, read-only anonymous)
+     11. TWITCH IRC (WebSocket)
   ========================================================= */
   const twitchBtn = document.getElementById("twitchBtn");
   const twitchChannelInput = document.getElementById("twitchChannel");
@@ -796,9 +783,9 @@
   document.getElementById("testQA").addEventListener("click", ()=> doQA("is this thing on"));
 
   /* =========================================================
-     14. INIT — nothing shows until the first line is spoken
+     14. INIT (Safe: No auto-speech on load, fully initialized)
   ========================================================= */
-  setTimeout(()=>{ doBark("background"); }, 900);
+  // Initialization complete. Fully ready for OBS or manual triggers.
 
 })();
 </script>
