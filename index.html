@@ -193,21 +193,27 @@
   }
   .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
 
-  /* ---------- Stream Control Desk Styling ---------- */
-  .desk-container { display:flex; flex-direction:column; gap:18px; margin-top:10px; }
-  .desk-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:18px; }
-  @media (max-width:780px){ .desk-grid { grid-template-columns:1fr; } }
+  /* ---------- Stream Control Desk Layout (Clean Nesting Grid) ---------- */
+  .desk-container { display:flex; flex-direction:column; gap:16px; margin-top:10px; }
+  .desk-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); 
+    gap: 16px; 
+    align-items: start;
+  }
+  @media (max-width: 860px) { .desk-grid { grid-template-columns: 1fr; } }
 
   .desk-card {
-    background:var(--panel); border:1px solid var(--hairline); border-radius:6px; padding:20px 22px;
-    resize: both; overflow: auto; min-width: 280px; min-height: 200px; position: relative;
+    background: var(--panel); 
+    border: 1px solid var(--hairline); 
+    border-radius: 6px; 
+    padding: 20px 22px;
+    width: 100%;
   }
   .desk-card__header {
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
-    cursor: grab; border-bottom: 1px dashed var(--hairline); padding-bottom: 8px;
+    border-bottom: 1px dashed var(--hairline); padding-bottom: 8px;
   }
-  .desk-card__header:active { cursor: grabbing; }
-  .drag-handle { color: var(--mist); font-size: 14px; margin-right: 8px; letter-spacing: 2px; }
 
   .timer-block{ display:flex; flex-direction:column; gap:14px; height:100%; }
   .clockwrap{
@@ -229,15 +235,14 @@
   
   .sticky-card{
     display:flex; flex-direction:column; background:var(--panel-raised); color:var(--ash);
-    border-radius:4px; padding:18px; border:1px solid var(--hairline); position:relative;
-    resize: both; overflow: auto; min-width: 280px; min-height: 220px;
+    border-radius:6px; padding:20px 22px; border:1px solid var(--hairline); position:relative; width: 100%;
   }
   .sticky-card::before{
     content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%); width:14px; height:14px; border-radius:50%; background:var(--red);
   }
-  .sticky-card__header-bar { display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--hairline); padding-bottom:6px; margin-bottom:8px; cursor: grab; }
-  .sticky-card__title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; text-transform:uppercase; background:transparent; border:none; color:var(--red); width:100%; outline:none; }
-  .sticky-card__body{ background:transparent; border:none; resize:none; flex:1; font-size:13px; color:var(--ash); line-height:1.5; min-height: 100px; }
+  .sticky-card__header-bar { display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--hairline); padding-bottom:8px; margin-bottom:14px; }
+  .sticky-card__title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; text-transform:uppercase; background:transparent; border:none; color:var(--red); width:100%; outline:none; }
+  .sticky-card__body{ background:transparent; border:1px solid var(--hairline); border-radius:6px; resize:vertical; flex:1; font-size:13px; color:var(--ash); line-height:1.5; min-height: 120px; padding:10px; }
 
   .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
   button.chip{ padding:6px 12px; font-size:11px; background:var(--void); border:1px solid var(--hairline); color:var(--ash); border-radius:4px; cursor:pointer; font-family:'Rajdhani',sans-serif; text-transform:uppercase; }
@@ -291,17 +296,6 @@
       </select>
     </div>
 
-    <!-- Workspace Profiles -->
-    <div class="control-group">
-      <span class="control-label">Layout Profile</span>
-      <select id="profileSelect">
-        <option value="default">Default Desk</option>
-        <option value="stream">Stream Setup</option>
-        <option value="writing">Writing/Dev Setup</option>
-      </select>
-      <button class="action-btn ghost small" id="saveProfileBtn" title="Save current layout configuration">Save</button>
-    </div>
-
     <div class="control-group">
       <span class="control-label">Palette</span>
       <div class="swatches" id="swatches"></div>
@@ -329,17 +323,14 @@
 
   <!-- VIEW 3: Stream Control Desk -->
   <div class="view-panel" data-view="controldesk">
-    <div class="desk-container" id="deskContainer">
+    <div class="desk-container">
       
       <!-- Twitch Username Config Card (Zero Developer Setup) -->
-      <div class="desk-card draggable-card" draggable="true" id="card-oauth">
+      <div class="desk-card">
         <div class="desk-card__header">
-          <div style="display:flex; align-items:center;">
-            <span class="drag-handle" title="Drag to rearrange">⠿</span>
-            <div>
-              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Twitch Channel Connection</p>
-              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Just type your channel username—zero developer console setup required</p>
-            </div>
+          <div>
+            <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Twitch Channel Connection</p>
+            <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Just type your channel username—zero developer console setup required</p>
           </div>
           <span id="authStatusBadge" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Not Connected</span>
         </div>
@@ -351,20 +342,15 @@
         </div>
       </div>
 
-      <!-- Top Row Grid (Draggable Cards) -->
+      <!-- Top Row Grid (Clean Responsive Nesting) -->
       <div class="desk-grid">
-        <div class="desk-card draggable-card" draggable="true" id="card-cue">
+        <div class="desk-card">
           <div class="desk-card__header">
-            <div style="display:flex; align-items:center;">
-              <span class="drag-handle" title="Drag to rearrange">⠿</span>
-              <div>
-                <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Game Switch Cue</p>
-                <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Countdown to your next transition (Default: 120m)</p>
-              </div>
+            <div>
+              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Game Switch Cue</p>
+              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Countdown to your next transition</p>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span id="gameStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Idle</span>
-            </div>
+            <span id="gameStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Idle</span>
           </div>
           <div class="timer-block">
             <div class="clockwrap" id="gameClockWrap">
@@ -401,26 +387,20 @@
           </div>
         </div>
 
-        <div class="sticky-card draggable-card" draggable="true" id="card-sticky">
+        <div class="sticky-card">
           <div class="sticky-card__header-bar">
-            <div style="display:flex; align-items:center; flex:1;">
-              <span class="drag-handle" title="Drag to rearrange">⠿</span>
-              <input class="sticky-card__title" value="Stream Reminder" maxlength="30">
-            </div>
+            <input class="sticky-card__title" value="Stream Reminder" maxlength="30">
           </div>
           <textarea class="sticky-card__body" id="stickyBody" placeholder="Goals, cues, or reminders for mid-stream..."></textarea>
         </div>
       </div>
 
-      <!-- Bottom Card (Draggable Desk Section) -->
-      <div class="desk-card draggable-card" draggable="true" id="card-stopwatch">
+      <!-- Bottom Card (Stream Stopwatch & Live Stats) -->
+      <div class="desk-card">
         <div class="desk-card__header">
-          <div style="display:flex; align-items:center;">
-            <span class="drag-handle" title="Drag to rearrange">⠿</span>
-            <div>
-              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Stream Stopwatch & Live Stats</p>
-              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Auto-syncs uptime via public channel lookup • Live viewer counter active</p>
-            </div>
+          <div>
+            <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Stream Stopwatch & Live Stats</p>
+            <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Auto-syncs uptime via public channel lookup • Live viewer counter active</p>
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
             <div style="font-family:'Rajdhani',sans-serif; font-size:12px; background:var(--void); border:1px solid var(--hairline); border-radius:4px; padding:4px 8px;">
@@ -462,6 +442,7 @@
           <button class="action-btn ghost" id="clearLogBtn" style="color:var(--red); border-color:var(--red);">Clear Log</button>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -469,14 +450,12 @@
 </div>
 
 <script>
-  // ---------- DOM Element References ----------
   const globalFontSelect = document.getElementById('globalFontSelect');
   const globalSizeSelect = document.getElementById('globalSizeSelect');
   const stickyBody = document.getElementById('stickyBody');
   const matBlueprint = document.getElementById('mat-blueprint');
   const matRelease = document.getElementById('mat-release');
 
-  // ---------- Data Models ----------
   const blueprintData = {
     title: "CREATOR WEEKLY BLUEPRINT", meta: "25-HR NON-STREAMING ALLOCATION",
     columns: [
@@ -571,7 +550,6 @@
   renderMat(matBlueprint, blueprintData);
   renderMat(matRelease, releaseData);
 
-  // ---------- Global Typography Control ----------
   function applyGlobalTypography(){
     if (!globalFontSelect || !globalSizeSelect || !stickyBody) return;
     const font = globalFontSelect.value;
@@ -589,7 +567,6 @@
   globalFontSelect.addEventListener('change', applyGlobalTypography);
   globalSizeSelect.addEventListener('change', applyGlobalTypography);
 
-  // ---------- Tabs & Scaling ----------
   const tabs = document.querySelectorAll('.tab');
   const panels = document.querySelectorAll('.view-panel');
   tabs.forEach(tab => {
@@ -615,7 +592,6 @@
   window.addEventListener('resize', fitScales);
   fitScales();
 
-  // ---------- Image Upload & Block Actions ----------
   document.addEventListener('click', (e) => {
     if (e.target.classList.contains('block__remove')){
       e.target.closest('.block').remove();
@@ -653,34 +629,6 @@
 
   document.addEventListener('input', scheduleSave);
 
-  // ---------- Drag and Drop Rearranging ----------
-  let draggedCard = null;
-  document.querySelectorAll('.draggable-card').forEach(card => {
-    card.addEventListener('dragstart', (e) => {
-      draggedCard = card;
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    card.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-    });
-    card.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (!draggedCard || draggedCard === card) return;
-      const parent = card.parentNode;
-      const allCards = [...parent.children];
-      const draggedIdx = allCards.indexOf(draggedCard);
-      const targetIdx = allCards.indexOf(card);
-      if (draggedIdx < targetIdx) {
-        parent.insertBefore(draggedCard, card.nextSibling);
-      } else {
-        parent.insertBefore(draggedCard, card);
-      }
-      scheduleSave();
-    });
-  });
-
-  // ---------- Palette Controls ----------
   const PRESETS = [
     { name:'Crimson', hex:'#e21f2d' }, { name:'Cyan', hex:'#1fd0e2' },
     { name:'Violet', hex:'#a239f2' }, { name:'Amber', hex:'#f2a71f' },
@@ -713,7 +661,6 @@
   });
   customColorEl.addEventListener('input', (e) => applyPalette(e.target.value, false));
 
-  // ---------- Zero-Config Twitch Username Sync ----------
   let currentUsername = localStorage.getItem('twitch_username') || '';
   let channelPollInterval = null;
 
@@ -777,7 +724,6 @@
   async function pollChannelData() {
     if (!currentUsername) return;
     try {
-      // Using public Decapi endpoints for zero-config username stat lookups
       const viewerRes = await fetch(`https://decapi.me/twitch/viewers/${currentUsername}`);
       if (viewerRes.ok) {
         const text = await viewerRes.text();
@@ -792,7 +738,6 @@
       if (uptimeRes.ok) {
         const uptimeText = await uptimeRes.text();
         if (uptimeText && !uptimeText.includes('offline') && !uptimeText.includes('is offline')) {
-          // If online, attempt to sync elapsed timer if not already running
           document.getElementById('streamStatusDot').textContent = 'On Air';
         } else {
           document.getElementById('streamStatusDot').textContent = 'Off Air';
@@ -803,7 +748,6 @@
     }
   }
 
-  // ---------- Stream Control Desk Logic ----------
   let activeAlarmInterval = null;
 
   function playBeep(type = 'warning') {
@@ -907,7 +851,6 @@
     });
   });
 
-  // Stream Stopwatch & Notes
   let streamElapsed = 0, streamStart = null, streamTimer = null, streamRunning = false, entries = [];
   function renderStreamClock(){
     const cur = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
@@ -986,7 +929,6 @@
     a.download = 'stream-session-log.txt'; a.click();
   });
 
-  // Simultaneous F13 + F24 Key Tracker
   const pressedKeys = {};
   window.addEventListener('keydown', (e) => {
     if (e.key === 'F13' || e.code === 'F13') pressedKeys['F13'] = true;
@@ -1002,7 +944,6 @@
     if (e.key === 'F24' || e.code === 'F24') pressedKeys['F24'] = false;
   });
 
-  // ---------- Export Active Mat ----------
   document.getElementById('exportBtn').addEventListener('click', async () => {
     const activeTab = document.querySelector('.tab[data-active="true"]').dataset.view;
     if(activeTab === 'controldesk') return alert('Switch to Weekly Blueprint or Content Schedule to export as a mat PNG.');
@@ -1025,38 +966,6 @@
     }
   });
 
-  // ---------- Workspace Layout Profiles ----------
-  const profileSelect = document.getElementById('profileSelect');
-  document.getElementById('saveProfileBtn').addEventListener('click', () => {
-    const profileKey = 'ccc-profile-' + profileSelect.value;
-    const layoutState = {
-      cardOrder: [...document.querySelectorAll('.draggable-card')].map(c => c.id),
-      cardStyles: [...document.querySelectorAll('.desk-card, .sticky-card')].map(c => ({ id: c.id, width: c.style.width, height: c.style.height }))
-    };
-    localStorage.setItem(profileKey, JSON.stringify(layoutState));
-    alert('Layout profile saved successfully!');
-  });
-
-  profileSelect.addEventListener('change', () => {
-    const saved = localStorage.getItem('ccc-profile-' + profileSelect.value);
-    if (!saved) return;
-    try {
-      const state = JSON.parse(saved);
-      state.cardOrder.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && el.parentElement) el.parentElement.appendChild(el);
-      });
-      state.cardStyles.forEach(st => {
-        const el = document.getElementById(st.id);
-        if (el) {
-          if (st.width) el.style.width = st.width;
-          if (st.height) el.style.height = st.height;
-        }
-      });
-    } catch(e) {}
-  });
-
-  // ---------- LocalStorage Persistence ----------
   function serializeMat(container){
     return {
       title: container.querySelector('.mat-title').innerText.trim(),
