@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stream Control Desk</title>
+<title>Creator Command Center & Stream Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@700;800;900&family=Cinzel:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Space+Mono:wght@400;700&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --void:#0a0a0c;
@@ -23,38 +24,84 @@
   body{
     background:#1a1a1d;
     color:var(--ash);
-    font-family:'Inter',sans-serif;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
     min-height:100vh;
-    padding:28px 16px 60px;
+    padding:24px 16px 60px;
   }
-  .app{ max-width:1200px; margin:0 auto; }
+  .app{ max-width:1680px; margin:0 auto; }
   .app__header{ margin-bottom:16px; }
   .app__header h1{
-    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:20px;
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:22px;
     margin:0 0 4px; letter-spacing:.02em;
   }
   .app__header p{ margin:0; font-size:13px; color:#9a97a0; }
 
-  .toolbar{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
-  .palette-group{ display:flex; align-items:center; gap:8px; }
-  .palette-label{
-    font-family:'Rajdhani',sans-serif; font-size:12px; color:var(--mist);
+  /* ---------- Toolbar & Controls ---------- */
+  .toolbar{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    margin-bottom:18px; background:var(--panel); padding:12px 16px;
+    border:1px solid var(--hairline); border-radius:6px;
+  }
+  .tabs{ display:flex; gap:8px; flex-wrap:wrap; }
+  .tab{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:13px; letter-spacing:.04em;
+    text-transform:uppercase; background:#222226; color:var(--mist);
+    border:1px solid #2c2c31; border-radius:6px; padding:8px 14px; cursor:pointer;
+  }
+  .tab[data-active="true"]{ background:var(--red-fill); color:var(--ash); border-color:var(--red); }
+  .spacer{ flex:1; }
+
+  .control-group{ display:flex; align-items:center; gap:8px; }
+  .control-label{
+    font-family:'Rajdhani',sans-serif; font-size:11px; color:var(--mist);
     text-transform:uppercase; letter-spacing:.06em;
   }
   .swatches{ display:flex; gap:6px; }
-  .swatch{ width:22px; height:22px; border-radius:50%; border:2px solid #2c2c31; cursor:pointer; padding:0; }
+  .swatch{ width:20px; height:20px; border-radius:50%; border:2px solid #2c2c31; cursor:pointer; padding:0; }
   .swatch[data-active="true"]{ border-color:#fff; }
-  #customColor{ width:34px; height:28px; border:none; background:none; padding:0; cursor:pointer; }
-  .spacer{ flex:1; }
-
-  /* ---------- outer frame (matches planning mats) ---------- */
-  .frame{
-    position:relative;
-    background:var(--void);
-    border:2px solid var(--red);
-    border-radius:6px;
-    padding:34px 30px 26px;
+  #customColor{ width:30px; height:26px; border:none; background:none; padding:0; cursor:pointer; }
+  
+  select, input[type="text"]{
+    background:var(--void); border:1px solid var(--hairline); color:var(--ash);
+    border-radius:4px; padding:5px 8px; font-family:'Inter', sans-serif; font-size:12px; cursor:pointer;
   }
+  select:focus, input[type="text"]:focus{ outline:2px solid var(--red); }
+
+  .action-btn{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; letter-spacing:.04em;
+    text-transform:uppercase; background:var(--red); color:#1a0507;
+    border:1px solid var(--red); border-radius:6px; padding:8px 16px; cursor:pointer;
+    transition: filter .15s ease;
+  }
+  .action-btn:hover{ filter:brightness(1.08); }
+  .action-btn.ghost{ background:transparent; color:var(--mist); border-color:#2c2c31; }
+  .action-btn.small { padding:4px 8px; font-size:11px; }
+
+  /* ---------- Workspace views ---------- */
+  .view-panel{ display:none; }
+  .view-panel[data-active="true"]{ display:block; }
+
+  /* ---------- Planning Mat Styling (16:9 Scaled) ---------- */
+  .mat-scale-wrapper{ position:relative; width:100%; overflow:hidden; }
+  .mat{
+    width:1600px; height:900px;
+    background:var(--void); border:2px solid var(--red); border-radius:6px;
+    position:absolute; top:0; left:0; transform-origin: top left;
+    padding:28px 34px 24px; display:flex; flex-direction:column;
+    font-family:'Rajdhani',sans-serif; color:var(--ash);
+  }
+  
+  .mat.is-exporting .block__remove,
+  .mat.is-exporting .block__imgremove,
+  .mat.is-exporting .block__addimg,
+  .mat.is-exporting .daycol__addbtn {
+    display: none !important;
+  }
+  .mat.is-exporting [contenteditable="true"] {
+    background: transparent !important;
+  }
+
   .corner{ position:absolute; width:26px; height:26px; pointer-events:none; }
   .corner::before, .corner::after{ content:""; position:absolute; background:var(--red); }
   .corner::before{ height:3px; width:100%; }
@@ -72,621 +119,580 @@
   .top-tab__line--l{ right:calc(50% + 12px); }
   .top-tab__line--r{ left:calc(50% + 12px); }
 
-  .frame__header{ position:relative; display:flex; flex-direction:column; align-items:center; padding-top:6px; margin-bottom:8px; }
+  .mat__header{ position:relative; display:flex; flex-direction:column; align-items:center; padding-top:6px; }
   .badge{
-    position:absolute; top:-6px; left:2px;
-    width:56px; height:56px; border-radius:50%;
-    border:3px solid var(--red); background:var(--panel);
-    display:flex; align-items:center; justify-content:center;
+    position:absolute; top:-6px; left:2px; width:64px; height:64px; border-radius:50%;
+    border:3px solid var(--red); background:var(--panel); display:flex; align-items:center; justify-content:center;
   }
-  .frame-title{
-    font-family:'Big Shoulders Stencil',sans-serif; font-weight:800; font-size:42px;
-    letter-spacing:.03em; color:var(--ash); text-align:center; margin:0;
-    text-shadow: 0 0 18px var(--glow);
+  .mat-title{
+    font-family:'Big Shoulders Stencil',sans-serif; font-weight:800; font-size:52px;
+    letter-spacing:.03em; color:var(--ash); text-align:center; margin:0; text-shadow: 0 0 18px var(--glow); outline:none;
   }
-  .frame-meta{
-    position:absolute; top:2px; right:2px;
-    font-family:'Space Mono',monospace; font-size:11px; color:var(--mist); text-align:right;
+  .mat-meta{
+    position:absolute; top:2px; right:2px; font-family:'Space Mono',monospace; font-size:12px; color:var(--mist); text-align:right; outline:none;
   }
 
-  section{
-    background:var(--panel); border:1px solid var(--hairline); border-radius:6px;
-    padding:20px 22px; margin-top:20px;
+  .matgrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:10px; flex:1; min-height:0; margin-top:30px; }
+  .daycol{
+    border:1.5px solid var(--hairline); border-radius:4px; background:var(--panel);
+    display:flex; flex-direction:column; padding:10px 9px; min-height:0;
   }
-  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
-  .section-title{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; letter-spacing:.03em; margin:0; text-transform:uppercase; }
-  .section-sub{ font-size:12px; color:var(--mist); margin-top:2px; }
-
-  .status-dot{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; letter-spacing:.1em;
-    text-transform:uppercase; color:var(--mist);
+  .daycol__day{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:17px; letter-spacing:.04em;
+    color:var(--red); text-transform:uppercase; text-align:center; outline:none;
   }
-  .status-dot::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--mist); display:inline-block; }
-  .status-dot[data-state="running"]{ color:var(--red); }
-  .status-dot[data-state="running"]::before{ background:var(--red); box-shadow:0 0 8px var(--red); }
-  .status-dot[data-state="live"]{ color:var(--red); }
-  .status-dot[data-state="live"]::before{ background:var(--red); box-shadow:0 0 10px var(--red); }
-  .status-dot[data-state="onair"]{ color:var(--red); }
-  .status-dot[data-state="onair"]::before{ background:var(--red); box-shadow:0 0 10px var(--red); }
+  .daycol__subtitle{
+    font-size:10.5px; color:var(--mist); text-align:center; margin:4px 0 10px; letter-spacing:.02em; outline:none;
+  }
+  .daycol__blocks{ display:flex; flex-direction:column; gap:7px; flex:1; min-height:0; overflow-y:auto; }
+  
+  .block{
+    border:1px solid var(--hairline); border-radius:3px; background:var(--panel-raised);
+    display:flex; flex-direction:column; overflow:hidden; position:relative; flex-shrink:0;
+  }
+  .block__remove{
+    position:absolute; top:2px; right:2px; width:15px; height:15px;
+    background:rgba(0,0,0,.45); color:var(--mist); border:none; border-radius:50%;
+    font-size:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3;
+  }
+  .block__remove:hover{ color:var(--red); background:rgba(0,0,0,.7); }
 
-  /* ---------- Live desk (countdown + sticky) ---------- */
-  .livedesk{ display:grid; grid-template-columns:1.3fr 1fr; gap:18px; align-items:stretch; margin-top:20px; }
-  @media (max-width:780px){ .livedesk{ grid-template-columns:1fr; } }
-  .livedesk__card{ background:var(--panel); border:1px solid var(--hairline); border-radius:6px; padding:20px 22px; }
+  .block__label{
+    background:var(--red-fill); color:var(--red); font-family:'Space Mono',monospace; font-size:9.5px;
+    text-transform:uppercase; padding:4px 18px 4px 6px; text-align:center; outline:none; flex:0 0 auto;
+  }
+  
+  .block__imgwrap{
+    position:relative; width:100%; display:none; background:rgba(0,0,0,.3);
+    border-bottom:1px solid var(--hairline); overflow:hidden;
+  }
+  .block__imgwrap[data-has="true"]{ display:block; }
+  .block__img{ width:100%; height:110px; object-fit:cover; display:block; }
+  .block__imgremove{
+    position:absolute; top:4px; right:4px; width:16px; height:16px;
+    background:rgba(0,0,0,0.7); color:var(--mist); border:none; border-radius:50%;
+    font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:4;
+  }
+  .block__imgremove:hover{ color:var(--red); }
+
+  .block__body{
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:8px 7px; outline:none; min-height:36px;
+  }
+  [contenteditable="true"]:hover{ background:rgba(226,31,45,.06); }
+  [contenteditable="true"]:focus{ background:rgba(226,31,45,.12); }
+
+  .block__addimg{
+    width:100%; background:transparent; border:none; border-top:1px dashed var(--hairline);
+    color:var(--mist); font-family:'Rajdhani',sans-serif; font-size:9.5px; text-transform:uppercase; padding:3px 0; cursor:pointer;
+  }
+  .block__addimg:hover{ color:var(--red); }
+  .daycol__addbtn{
+    margin-top:6px; width:100%; background:transparent; border:1px dashed var(--hairline);
+    color:var(--mist); font-family:'Rajdhani',sans-serif; font-size:10.5px; text-transform:uppercase; border-radius:3px; padding:5px 0; cursor:pointer;
+  }
+  .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
+
+  /* ---------- Stream Control Desk Styling ---------- */
+  .desk-container { display:flex; flex-direction:column; gap:18px; margin-top:10px; }
+  .desk-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:18px; }
+  @media (max-width:780px){ .desk-grid { grid-template-columns:1fr; } }
+
+  .desk-card {
+    background:var(--panel); border:1px solid var(--hairline); border-radius:6px; padding:20px 22px;
+    resize: both; overflow: auto; min-width: 280px; min-height: 200px; position: relative;
+  }
+  .desk-card__header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    cursor: grab; border-bottom: 1px dashed var(--hairline); padding-bottom: 8px;
+  }
+  .desk-card__header:active { cursor: grabbing; }
+  .drag-handle { color: var(--mist); font-size: 14px; margin-right: 8px; letter-spacing: 2px; }
 
   .timer-block{ display:flex; flex-direction:column; gap:14px; height:100%; }
   .clockwrap{
     align-self:flex-start; border:2px solid var(--hairline); border-radius:12px;
-    padding:14px 20px; background:var(--panel-raised); text-align:center;
-    transition:border-color .25s ease, box-shadow .25s ease;
+    padding:14px 20px; background:var(--panel-raised); text-align:center; transition:border-color .25s ease;
   }
-  .clockwrap[data-state="running"]{ border-color:var(--red); }
-  .clockwrap[data-state="live"], .clockwrap[data-state="onair"]{ border-color:var(--red); box-shadow:0 0 24px var(--glow); }
-  @media (prefers-reduced-motion: no-preference){
-    .clockwrap[data-state="live"], .clockwrap[data-state="onair"]{ animation:cuepulse 1.2s ease-in-out infinite; }
-  }
-  @keyframes cuepulse{
-    0%,100%{ box-shadow:0 0 16px var(--glow); }
-    50%{ box-shadow:0 0 32px var(--glow); }
-  }
-  .clock-display{ font-family:'Space Mono',monospace; font-weight:700; font-size:40px; letter-spacing:.02em; line-height:1; color:var(--ash); }
+  .clockwrap[data-state="running"], .clockwrap[data-state="live"], .clockwrap[data-state="onair"]{ border-color:var(--red); }
+  .clock-display{ font-family:'Space Mono',monospace; font-weight:700; font-size:38px; color:var(--ash); }
   .clock-display--live{ color:var(--red); }
-  .clock-label-under{ margin-top:6px; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mist); font-family:'Rajdhani',sans-serif; font-weight:600; }
+  .clock-label-under{ margin-top:4px; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mist); font-family:'Rajdhani',sans-serif; font-weight:600; }
 
-  .field-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  label.small-label{
-    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:10px; letter-spacing:.12em;
-    text-transform:uppercase; color:var(--mist); display:block; margin-bottom:4px;
-  }
-  input[type="text"], input[type="number"], textarea{
+  .field-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  label.small-label{ font-family:'Rajdhani',sans-serif; font-weight:600; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--mist); display:block; margin-bottom:4px; }
+  input[type="number"], input[type="text"], textarea{
     background:var(--void); border:1px solid var(--hairline); color:var(--ash);
-    border-radius:6px; padding:9px 11px; font-family:'Inter',sans-serif; font-size:14px;
+    border-radius:6px; padding:9px 11px; font-family:'Inter', sans-serif; font-size:13px;
   }
-  input[type="text"]:focus, input[type="number"]:focus, textarea:focus{
-    outline:2px solid var(--red); outline-offset:1px; border-color:transparent;
-  }
-  .label-input{ width:100%; max-width:340px; font-weight:600; }
-  .duration-input{ width:60px; font-family:'Space Mono',monospace; text-align:center; }
-  .duration-group{ display:flex; align-items:flex-end; gap:6px; }
-  .duration-colon{ font-family:'Space Mono',monospace; font-size:18px; color:var(--mist); padding-bottom:8px; }
-
-  button{
-    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:.06em;
-    text-transform:uppercase; border-radius:6px; border:1px solid var(--hairline);
-    background:var(--panel-raised); color:var(--ash); padding:10px 16px; cursor:pointer;
-    transition:transform .1s ease, background .15s ease, border-color .15s ease;
-  }
-  button:hover{ border-color:var(--mist); }
-  button:active{ transform:scale(.97); }
-  button:focus-visible, .swatch:focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
-  button.primary{ background:var(--red); color:#1a0507; border-color:var(--red); }
-  button.danger{ background:transparent; color:var(--red); border-color:var(--red); }
-  button.ghost{ background:transparent; }
-  button.chip{ padding:6px 12px; font-size:11px; background:var(--void); }
-  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
-
-  /* ---------- Sticky note ---------- */
+  input[type="number"]:focus, input[type="text"]:focus, textarea:focus{ outline:2px solid var(--red); border-color:transparent; }
+  
   .sticky-card{
-    background:var(--panel-raised); color:var(--ash); border-radius:4px;
-    padding:18px 16px 16px; height:100%; min-height:200px;
-    display:flex; flex-direction:column;
-    box-shadow:0 10px 18px -8px rgba(0,0,0,.6);
-    border:1px solid var(--hairline);
-    position:relative; transform:rotate(-1deg);
+    display:flex; flex-direction:column; background:var(--panel-raised); color:var(--ash);
+    border-radius:4px; padding:18px; border:1px solid var(--hairline); position:relative;
+    resize: both; overflow: auto; min-width: 280px; min-height: 220px;
   }
   .sticky-card::before{
-    content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%);
-    width:14px; height:14px; border-radius:50%; background:var(--red);
-    box-shadow:0 2px 4px rgba(0,0,0,.5);
+    content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%); width:14px; height:14px; border-radius:50%; background:var(--red);
   }
-  .sticky-card__title{
-    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; letter-spacing:.04em;
-    text-transform:uppercase; background:transparent; border:none;
-    border-bottom:1px dashed var(--hairline); color:var(--red); padding:2px 0 6px; margin-bottom:8px; width:100%;
-  }
-  .sticky-card__title:focus{ outline:none; border-bottom-color:var(--red); }
-  .sticky-card__body{
-    background:transparent; border:none; resize:none; flex:1;
-    font-family:'Inter',sans-serif; font-size:13px; color:var(--ash); padding:0; line-height:1.5;
-  }
-  .sticky-card__body:focus{ outline:none; }
-  .sticky-card__body::placeholder{ color:var(--mist); }
+  .sticky-card__header-bar { display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--hairline); padding-bottom:6px; margin-bottom:8px; cursor: grab; }
+  .sticky-card__title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; text-transform:uppercase; background:transparent; border:none; color:var(--red); width:100%; outline:none; }
+  .sticky-card__body{ background:transparent; border:none; resize:none; flex:1; font-size:13px; color:var(--ash); line-height:1.5; min-height: 100px; }
 
-  /* ---------- Stream timeline ---------- */
-  .streambay{ display:flex; flex-direction:column; gap:20px; }
-  .streamclock-row{ display:flex; gap:24px; flex-wrap:wrap; align-items:center; }
-  .sync-row{ background:var(--void); border:1px dashed var(--hairline); border-radius:6px; padding:10px 14px; }
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  button.chip{ padding:6px 12px; font-size:11px; background:var(--void); border:1px solid var(--hairline); color:var(--ash); border-radius:4px; cursor:pointer; font-family:'Rajdhani',sans-serif; text-transform:uppercase; }
+  button.chip:hover{ border-color:var(--mist); }
 
-  .log-capture{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
-  .log-capture input[type="text"]{ flex:1; min-width:200px; }
-  .clock-badge{
-    font-family:'Space Mono',monospace; font-size:13px; background:var(--void);
-    border:1px solid var(--hairline); border-radius:6px; padding:9px 12px; color:var(--red); white-space:nowrap;
-  }
-  .log-list{ list-style:none; margin:0; padding:0; max-height:280px; overflow-y:auto; border-top:1px solid var(--hairline); }
-  .log-list li{ display:flex; gap:12px; align-items:baseline; padding:10px 2px; border-bottom:1px solid var(--hairline); }
-  .log-list__time{ font-family:'Space Mono',monospace; font-size:12px; color:var(--red); flex:0 0 auto; min-width:90px; }
-  .log-list__note{ flex:1; font-size:13px; color:var(--ash); }
-  .log-list__del{ background:transparent; border:none; color:var(--mist); font-size:12px; cursor:pointer; padding:2px 6px; }
+  .log-list{ list-style:none; margin:0; padding:0; max-height:240px; overflow-y:auto; border-top:1px solid var(--hairline); }
+  .log-list li{ display:flex; gap:12px; align-items:baseline; padding:8px 2px; border-bottom:1px solid var(--hairline); }
+  .log-list__time{ font-family:'Space Mono',monospace; font-size:12px; color:var(--red); min-width:85px; }
+  .log-list__note{ flex:1; font-size:13px; }
+  .log-list__del{ background:transparent; border:none; color:var(--mist); cursor:pointer; }
   .log-list__del:hover{ color:var(--red); }
-  .log-empty{ color:var(--mist); font-size:13px; padding:18px 2px; text-align:center; }
-  .log-actions{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
-
-  /* ---------- Goals ---------- */
-  .goals-pad{
-    width:100%; min-height:180px;
-    background:linear-gradient(var(--panel) 0, var(--panel) 27px, var(--hairline) 28px);
-    background-size:100% 28px; line-height:28px; padding:0 4px; border:none;
-    color:var(--ash); font-family:'Inter',sans-serif; font-size:14px; resize:vertical;
-  }
-  .goals-pad:focus{ outline:none; }
-
-  footer{ text-align:center; font-size:12px; color:var(--mist); margin-top:16px; }
+  
+  footer{ text-align:center; font-size:12px; color:var(--mist); margin-top:20px; }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="app__header">
-    <h1>Stream Control Desk</h1>
-    <p>Same look as your planning mats — pick a palette, run your stream.</p>
+    <h1>Creator Command Center & Stream Desk</h1>
+    <p>Unified planning matrices, stream control timers, and instant zero-config Twitch username sync.</p>
   </div>
 
+  <!-- Unified Toolbar -->
   <div class="toolbar">
-    <div class="palette-group">
-      <span class="palette-label">Palette</span>
+    <div class="tabs">
+      <button class="tab" data-view="blueprint" data-active="true">Weekly Blueprint</button>
+      <button class="tab" data-view="release">Content Schedule</button>
+      <button class="tab" data-view="controldesk">Stream Control Desk</button>
+    </div>
+
+    <!-- Global Typography Controls -->
+    <div class="control-group">
+      <span class="control-label">Global Font</span>
+      <select id="globalFontSelect">
+        <option value="'Inter', sans-serif">Inter</option>
+        <option value="'Rajdhani', sans-serif">Rajdhani</option>
+        <option value="'Space Mono', monospace">Space Mono</option>
+        <option value="'Plus Jakarta Sans', sans-serif">Jakarta Sans</option>
+        <option value="'JetBrains Mono', monospace">JetBrains</option>
+        <option value="'Orbitron', sans-serif">Orbitron</option>
+        <option value="'Cinzel', serif">Cinzel</option>
+        <option value="'Teko', sans-serif">Teko</option>
+      </select>
+      <select id="globalSizeSelect">
+        <option value="9px">9px</option>
+        <option value="10px">10px</option>
+        <option value="11px" selected>11.5px</option>
+        <option value="13px">13px</option>
+        <option value="15px">15px</option>
+        <option value="18px">18px</option>
+      </select>
+    </div>
+
+    <!-- Workspace Profiles -->
+    <div class="control-group">
+      <span class="control-label">Layout Profile</span>
+      <select id="profileSelect">
+        <option value="default">Default Desk</option>
+        <option value="stream">Stream Setup</option>
+        <option value="writing">Writing/Dev Setup</option>
+      </select>
+      <button class="action-btn ghost small" id="saveProfileBtn" title="Save current layout configuration">Save</button>
+    </div>
+
+    <div class="control-group">
+      <span class="control-label">Palette</span>
       <div class="swatches" id="swatches"></div>
       <input type="color" id="customColor" value="#e21f2d" aria-label="Custom accent color">
     </div>
+
     <div class="spacer"></div>
+    <button class="action-btn ghost" id="resetBtn">Reset Defaults</button>
+    <button class="action-btn" id="exportBtn">Export Active Mat (PNG)</button>
   </div>
 
-  <div class="frame">
-    <div class="corner corner--tl"></div>
-    <div class="corner corner--tr"></div>
-    <div class="corner corner--bl"></div>
-    <div class="corner corner--br"></div>
-    <div class="top-tab"></div>
-    <div class="top-tab__line top-tab__line--l"></div>
-    <div class="top-tab__line top-tab__line--r"></div>
-
-    <div class="frame__header">
-      <div class="badge">
-        <svg width="26" height="26" viewBox="0 0 24 24" stroke="var(--red)" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 20V6M12 6l-5 5M12 6l5 5"/>
-        </svg>
-      </div>
-      <div class="frame-meta">SESSION ONLY</div>
-      <h2 class="frame-title">STREAM CONTROL DESK</h2>
+  <!-- VIEW 1: Weekly Blueprint -->
+  <div class="view-panel" data-view="blueprint" data-active="true">
+    <div class="mat-scale-wrapper" id="scaleWrapperBP">
+      <div class="mat" id="mat-blueprint" data-matname="creator-weekly-blueprint"></div>
     </div>
+  </div>
 
-    <!-- LIVE DESK: countdown + sticky note -->
-    <div class="livedesk">
-      <div class="livedesk__card">
-        <div class="section-head">
-          <div>
-            <p class="section-title">Game Switch Cue</p>
-            <p class="section-sub">Countdown to your next switch-up</p>
-          </div>
-          <span class="status-dot" id="gameStatusDot" data-state="idle">Idle</span>
-        </div>
-        <div class="timer-block">
-          <div class="clockwrap" id="gameClockWrap" data-state="idle">
-            <div class="clock-display" id="gameClockDisplay">05:00</div>
-            <div class="clock-label-under" id="gameClockLabelUnder">Switch to next game</div>
-          </div>
-          <div>
-            <label class="small-label" for="timerLabel">Cue label</label>
-            <input type="text" id="timerLabel" class="label-input" value="Switch to next game" maxlength="60">
-          </div>
-          <div class="field-row">
+  <!-- VIEW 2: Content Schedule -->
+  <div class="view-panel" data-view="release">
+    <div class="mat-scale-wrapper" id="scaleWrapperRel">
+      <div class="mat" id="mat-release" data-matname="video-release-schedule"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: Stream Control Desk -->
+  <div class="view-panel" data-view="controldesk">
+    <div class="desk-container" id="deskContainer">
+      
+      <!-- Twitch Username Config Card (Zero Developer Setup) -->
+      <div class="desk-card draggable-card" draggable="true" id="card-oauth">
+        <div class="desk-card__header">
+          <div style="display:flex; align-items:center;">
+            <span class="drag-handle" title="Drag to rearrange">⠿</span>
             <div>
-              <label class="small-label" for="minInput">Minutes</label>
-              <input type="number" id="minInput" class="duration-input" value="5" min="0" max="999">
-            </div>
-            <div class="duration-colon">:</div>
-            <div>
-              <label class="small-label" for="secInput">Seconds</label>
-              <input type="number" id="secInput" class="duration-input" value="0" min="0" max="59">
+              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Twitch Channel Connection</p>
+              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Just type your channel username—zero developer console setup required</p>
             </div>
           </div>
-          <div class="chip-row">
-            <button class="chip" data-preset="5">5m</button>
-            <button class="chip" data-preset="10">10m</button>
-            <button class="chip" data-preset="15">15m</button>
-            <button class="chip" data-preset="30">30m</button>
-            <button class="chip" data-preset="60">60m</button>
-          </div>
-          <div class="chip-row">
-            <button class="primary" id="startBtn">Start</button>
-            <button id="pauseBtn">Pause</button>
-            <button class="ghost" id="resetTimerBtn">Reset</button>
-          </div>
+          <span id="authStatusBadge" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Not Connected</span>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <input type="text" id="twitchUsernameInput" placeholder="e.g. davelevelsup" style="width:240px;">
+          <button class="action-btn" id="connectUsernameBtn">Connect Channel</button>
+          <button class="action-btn ghost" id="disconnectUsernameBtn" style="display:none; color:var(--red); border-color:var(--red);">Disconnect</button>
+          <span id="twitchUserDisplay" style="font-family:'Space Mono',monospace; font-size:12px; color:var(--red);"></span>
         </div>
       </div>
 
-      <div class="sticky-card">
-        <input class="sticky-card__title" value="Reminder" maxlength="30">
-        <textarea class="sticky-card__body" placeholder="Goals, cues, whatever you need to remember mid-stream..."></textarea>
-      </div>
-    </div>
-
-    <!-- STREAM TIMELINE -->
-    <section>
-      <div class="streambay">
-        <div class="section-head">
-          <div>
-            <p class="section-title">Stream Timer</p>
-            <p class="section-sub">Counts up from when you go live — notes below timestamp against this</p>
+      <!-- Top Row Grid (Draggable Cards) -->
+      <div class="desk-grid">
+        <div class="desk-card draggable-card" draggable="true" id="card-cue">
+          <div class="desk-card__header">
+            <div style="display:flex; align-items:center;">
+              <span class="drag-handle" title="Drag to rearrange">⠿</span>
+              <div>
+                <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Game Switch Cue</p>
+                <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Countdown to your next transition (Default: 120m)</p>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="gameStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Idle</span>
+            </div>
           </div>
-          <span class="status-dot" id="streamStatusDot" data-state="idle">Off air</span>
+          <div class="timer-block">
+            <div class="clockwrap" id="gameClockWrap">
+              <div class="clock-display" id="gameClockDisplay">120:00</div>
+              <div class="clock-label-under" id="gameClockLabelUnder">Switch to next game</div>
+            </div>
+            <div>
+              <label class="small-label" for="timerLabel">Cue Label</label>
+              <input type="text" id="timerLabel" value="Switch to next game" maxlength="60" style="width:100%; max-width:320px;">
+            </div>
+            <div class="field-row">
+              <div>
+                <label class="small-label" for="minInput">Minutes</label>
+                <input type="number" id="minInput" value="120" min="0" max="999" style="width:70px; text-align:center;">
+              </div>
+              <span style="font-family:'Space Mono',monospace; padding-top:16px;">:</span>
+              <div>
+                <label class="small-label" for="secInput">Seconds</label>
+                <input type="number" id="secInput" value="0" min="0" max="59" style="width:70px; text-align:center;">
+              </div>
+            </div>
+            <div class="chip-row">
+              <button class="chip" data-preset="30">30m</button>
+              <button class="chip" data-preset="60">60m</button>
+              <button class="chip" data-preset="90">90m</button>
+              <button class="chip" data-preset="120">120m</button>
+            </div>
+            <div class="chip-row">
+              <button class="action-btn" id="startBtn">Start</button>
+              <button class="action-btn ghost" id="pauseBtn">Pause</button>
+              <button class="action-btn ghost" id="resetTimerBtn">Reset</button>
+              <button class="action-btn" id="dismissAlarmBtn" style="display:none; background:#a239f2; color:#fff;">Dismiss Alarm</button>
+            </div>
+          </div>
         </div>
 
-        <div class="streamclock-row">
-          <div class="clockwrap" id="streamClockWrap" data-state="idle">
+        <div class="sticky-card draggable-card" draggable="true" id="card-sticky">
+          <div class="sticky-card__header-bar">
+            <div style="display:flex; align-items:center; flex:1;">
+              <span class="drag-handle" title="Drag to rearrange">⠿</span>
+              <input class="sticky-card__title" value="Stream Reminder" maxlength="30">
+            </div>
+          </div>
+          <textarea class="sticky-card__body" id="stickyBody" placeholder="Goals, cues, or reminders for mid-stream..."></textarea>
+        </div>
+      </div>
+
+      <!-- Bottom Card (Draggable Desk Section) -->
+      <div class="desk-card draggable-card" draggable="true" id="card-stopwatch">
+        <div class="desk-card__header">
+          <div style="display:flex; align-items:center;">
+            <span class="drag-handle" title="Drag to rearrange">⠿</span>
+            <div>
+              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Stream Stopwatch & Live Stats</p>
+              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Auto-syncs uptime via public channel lookup • Live viewer counter active</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="font-family:'Rajdhani',sans-serif; font-size:12px; background:var(--void); border:1px solid var(--hairline); border-radius:4px; padding:4px 8px;">
+              Viewers: <span id="liveViewerCount" style="font-family:'Space Mono',monospace; color:var(--red); font-weight:700;">--</span>
+            </div>
+            <span id="streamStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Off air</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+          <div class="clockwrap" id="streamClockWrap">
             <div class="clock-display" id="streamClockDisplay">00:00:00</div>
-            <div class="clock-label-under">Elapsed stream time</div>
+            <div class="clock-label-under">Elapsed stream time (Username Synced)</div>
           </div>
-          <div class="chip-row">
-            <button class="primary" id="streamStartBtn">Go live</button>
-            <button id="streamPauseBtn">Pause</button>
-            <button class="ghost" id="streamResetBtn">Reset</button>
+          <div class="chip-row" style="align-items:center;">
+            <button class="action-btn" id="streamStartBtn">Go Live / Force Sync</button>
+            <button class="action-btn ghost" id="streamPauseBtn">Pause</button>
+            <button class="action-btn ghost" id="streamResetBtn">Reset</button>
           </div>
-        </div>
-
-        <div class="sync-row">
-          <label class="small-label" for="syncInput">Sync to actual stream time (hh:mm:ss, from Twitch/YouTube/OBS)</label>
-          <div class="chip-row">
-            <input type="text" id="syncInput" placeholder="01:32:07" class="duration-input" style="width:100px;">
-            <button id="syncBtn">Sync</button>
+          <div style="display:flex; align-items:center; gap:6px; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:6px 10px;">
+            <label class="small-label" for="manualTimeInput" style="margin:0;">Set Time:</label>
+            <input type="text" id="manualTimeInput" placeholder="00:15:00" style="width:85px; text-align:center;">
+            <button class="action-btn small" id="streamSetTimeBtn">Apply</button>
           </div>
         </div>
 
-        <div>
-          <div class="section-head" style="margin-bottom:10px;">
-            <div>
-              <p class="section-title" style="font-size:13px;">Notes</p>
-              <p class="section-sub">Timestamped to stream length — export for VOD chapters</p>
-            </div>
-          </div>
+        <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+          <span id="logClockBadge" title="Click to sync/insert current time into note input" style="font-family:'Space Mono',monospace; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:9px 12px; color:var(--red); cursor:pointer;">00:00:00 ⟳</span>
+          <input type="text" id="noteInput" placeholder="Add chapter note (elapsed time auto-syncs on click)..." style="flex:1; min-width:220px;">
+          <button class="action-btn" id="logBtn">Add Note</button>
+          <button class="action-btn ghost" id="markBtn">Mark ⏱ (F13+F24)</button>
+        </div>
 
-          <div class="log-capture">
-            <span class="clock-badge" id="logClockBadge">00:00:00</span>
-            <input type="text" id="noteInput" placeholder="Optional note... (Enter to log)">
-            <button class="primary" id="logBtn">Add note</button>
-            <button id="markBtn">Mark ⏱</button>
-          </div>
+        <ul class="log-list" id="logList"></ul>
+        <p id="logEmpty" style="color:var(--mist); font-size:13px; text-align:center; padding:12px 0;">No notes or chapter markers logged yet.</p>
 
-          <ul class="log-list" id="logList"></ul>
-          <div class="log-empty" id="logEmpty">No notes yet — log something and it'll show up here.</div>
-
-          <div class="log-actions">
-            <button id="exportBtn">Export as .txt</button>
-            <button class="danger" id="clearLogBtn">Clear log</button>
-          </div>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="action-btn ghost" id="exportLogBtn">Export Log (.txt)</button>
+          <button class="action-btn ghost" id="clearLogBtn" style="color:var(--red); border-color:var(--red);">Clear Log</button>
         </div>
       </div>
-    </section>
-
-    <!-- GOALS -->
-    <section>
-      <div class="section-head">
-        <div>
-          <p class="section-title">Goals &amp; Planning</p>
-          <p class="section-sub">Free space for this stream — topics, targets, whatever's on your mind</p>
-        </div>
-      </div>
-      <textarea class="goals-pad" id="goalsPad" placeholder="Today's plan..."></textarea>
-    </section>
+    </div>
   </div>
 
-  <footer>Built for one session at a time. Refresh clears everything — export your log first.</footer>
+  <footer>Unified Creator Toolkit • Zero-config username sync active</footer>
 </div>
 
 <script>
-  // ---------- Game switch countdown ----------
-  const minInput = document.getElementById('minInput');
-  const secInput = document.getElementById('secInput');
-  const timerLabel = document.getElementById('timerLabel');
-  const gameClockDisplay = document.getElementById('gameClockDisplay');
-  const gameClockLabelUnder = document.getElementById('gameClockLabelUnder');
-  const gameClockWrap = document.getElementById('gameClockWrap');
-  const gameStatusDot = document.getElementById('gameStatusDot');
-  const startBtn = document.getElementById('startBtn');
-  const pauseBtn = document.getElementById('pauseBtn');
-  const resetTimerBtn = document.getElementById('resetTimerBtn');
+  // ---------- DOM Element References ----------
+  const globalFontSelect = document.getElementById('globalFontSelect');
+  const globalSizeSelect = document.getElementById('globalSizeSelect');
+  const stickyBody = document.getElementById('stickyBody');
+  const matBlueprint = document.getElementById('mat-blueprint');
+  const matRelease = document.getElementById('mat-release');
 
-  let gameDuration = 300;      // total seconds for the current cue
-  let gameElapsedBase = 0;     // seconds banked from prior run segments
-  let gameRunStart = null;     // Date.now() when the current run segment began
-  let gameIntervalId = null;
-  let gameRunning = false;
-  let audioCtx = null;
+  // ---------- Data Models ----------
+  const blueprintData = {
+    title: "CREATOR WEEKLY BLUEPRINT", meta: "25-HR NON-STREAMING ALLOCATION",
+    columns: [
+      { day:"MONDAY", subtitle:"6 HR STREAM + PRE-PREP", blocks:[
+        {label:"DAYTIME", body:"Stream setup, titles, & community check-ins."},
+        {label:"BLOCK 1", body:"Minecraft Cobblemon / Modded SMP"},
+        {label:"BLOCK 2", body:"Game Demo or Review Key"}
+      ]},
+      { day:"TUESDAY", subtitle:"PROD, EDIT & BACKLOG", blocks:[
+        {label:"BLOCK 1", body:"Video Editing & VOD Pipeline Archiving"},
+        {label:"BLOCK 2", body:"Asset Creation & Collab Planning"}
+      ]},
+      { day:"WEDNESDAY", subtitle:"6 HR STREAM + NARRATIVE", blocks:[
+        {label:"DAYTIME", body:"Mid-week review & stream board prep."},
+        {label:"BLOCK 1", body:"Narrative RPG Campaign"}
+      ]},
+      { day:"THURSDAY", subtitle:"CREATIVE WRITING & DEV", blocks:[
+        {label:"BLOCK 1", body:"TTRPG System Design & Expansion Modules"}
+      ]},
+      { day:"FRIDAY", subtitle:"GAME GREMLINS LIVE", blocks:[
+        {label:"START 7PM", body:"Podcast & Community Multiplayer"}
+      ]},
+      { day:"SATURDAY", subtitle:"REST & RECOVERY", blocks:[
+        {label:"OFF-AIR", body:"Completely offline."}
+      ]},
+      { day:"SUNDAY", subtitle:"THE FUCTORY TOUR", blocks:[
+        {label:"START 7PM", body:"Community multiplayer session."}
+      ]}
+    ]
+  };
 
-  function fmt(s){
-    const m = Math.floor(s/60);
-    const sec = s%60;
-    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
-  }
-  function fmtLong(s){
-    const h = Math.floor(s/3600);
-    const m = Math.floor((s%3600)/60);
-    const sec = s%60;
-    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
-  }
+  const releaseData = {
+    title: "CONTENT SCHEDULE", meta: "VIDEO RELEASE LINEUP",
+    columns: [
+      { day:"MONDAY", subtitle:"NO RELEASE", blocks:[{label:"STATUS", body:"Editing continues."}]},
+      { day:"TUESDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Monday Stream VOD."}]},
+      { day:"WEDNESDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Sunday Tour VOD."}]},
+      { day:"THURSDAY", subtitle:"NO RELEASE", blocks:[{label:"STATUS", body:"Writing day."}]},
+      { day:"FRIDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Wednesday Edit."}]},
+      { day:"SATURDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Bonus Feature."}]},
+      { day:"SUNDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Special Release."}]}
+    ]
+  };
 
-  function gameElapsedNow(){
-    if (gameRunning && gameRunStart){
-      return gameElapsedBase + Math.floor((Date.now() - gameRunStart) / 1000);
-    }
-    return gameElapsedBase;
-  }
-
-  function renderGame(){
-    const remaining = Math.max(gameDuration - gameElapsedNow(), 0);
-    gameClockDisplay.textContent = fmt(remaining);
-    gameClockLabelUnder.textContent = timerLabel.value || 'Switch to next game';
-    let state = 'idle';
-    if (remaining <= 0) state = 'live';
-    else if (gameRunning) state = 'running';
-    gameClockWrap.dataset.state = state;
-    gameStatusDot.dataset.state = state;
-    gameStatusDot.textContent = state === 'live' ? 'Switch now' : (state === 'running' ? 'Running' : 'Idle');
-    gameClockDisplay.classList.toggle('clock-display--live', state === 'live');
-
-    if (remaining <= 0 && gameRunning){
-      gameRunning = false;
-      if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
-      beep();
-    }
-  }
-
-  function beep(){
-    try{
-      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.08;
-      o.connect(g); g.connect(audioCtx.destination);
-      o.start(); o.stop(audioCtx.currentTime + 0.35);
-    }catch(e){}
+  function esc(str){
+    return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  function readDurationInputs(){
-    const m = Math.max(0, parseInt(minInput.value || '0', 10));
-    const s = Math.min(59, Math.max(0, parseInt(secInput.value || '0', 10)));
-    return m*60 + s;
+  function blockHtml(b){
+    const hasImg = !!b.img;
+    return `
+      <div class="block">
+        <button class="block__remove" title="Remove box">✕</button>
+        <div class="block__label" contenteditable="true" spellcheck="false">${esc(b.label)}</div>
+        <div class="block__imgwrap" data-has="${hasImg}">
+          <img class="block__img" alt="" src="${hasImg ? b.img : ''}">
+          <button class="block__imgremove" title="Remove image">✕</button>
+        </div>
+        <div class="block__body" contenteditable="true" spellcheck="false">${esc(b.body)}</div>
+        <button class="block__addimg">+ Add Image</button>
+      </div>
+    `;
   }
 
-  startBtn.addEventListener('click', () => {
-    if (gameRunning) return;
-    if (gameElapsedBase >= gameDuration){
-      gameDuration = readDurationInputs();
-      gameElapsedBase = 0;
-    }
-    gameRunning = true;
-    gameRunStart = Date.now();
-    gameIntervalId = setInterval(renderGame, 250);
-    renderGame();
+  function renderMat(container, data){
+    const colsHtml = data.columns.map(col => `
+      <div class="daycol">
+        <div class="daycol__day" contenteditable="true" spellcheck="false">${esc(col.day)}</div>
+        <div class="daycol__subtitle" contenteditable="true" spellcheck="false">${esc(col.subtitle)}</div>
+        <div class="daycol__blocks">${col.blocks.map(blockHtml).join('')}</div>
+        <button class="daycol__addbtn">+ Add Box</button>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="corner corner--tl"></div><div class="corner corner--tr"></div>
+      <div class="corner corner--bl"></div><div class="corner corner--br"></div>
+      <div class="top-tab"></div>
+      <div class="top-tab__line top-tab__line--l"></div><div class="top-tab__line top-tab__line--r"></div>
+      <div class="mat__header">
+        <div class="badge">
+          <svg width="28" height="28" viewBox="0 0 24 24" stroke="var(--red)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M12 20V6M12 6l-5 5M12 6l5 5"/></svg>
+        </div>
+        <div class="mat-meta" contenteditable="true" spellcheck="false">${esc(data.meta)}</div>
+        <h2 class="mat-title" contenteditable="true" spellcheck="false">${esc(data.title)}</h2>
+      </div>
+      <div class="matgrid">${colsHtml}</div>
+    `;
+    applyGlobalTypography();
+  }
+
+  renderMat(matBlueprint, blueprintData);
+  renderMat(matRelease, releaseData);
+
+  // ---------- Global Typography Control ----------
+  function applyGlobalTypography(){
+    if (!globalFontSelect || !globalSizeSelect || !stickyBody) return;
+    const font = globalFontSelect.value;
+    const size = globalSizeSelect.value;
+    
+    document.querySelectorAll('.block__body').forEach(el => {
+      el.style.fontFamily = font;
+      el.style.fontSize = size;
+    });
+    stickyBody.style.fontFamily = font;
+    stickyBody.style.fontSize = size;
+    scheduleSave();
+  }
+
+  globalFontSelect.addEventListener('change', applyGlobalTypography);
+  globalSizeSelect.addEventListener('change', applyGlobalTypography);
+
+  // ---------- Tabs & Scaling ----------
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.view-panel');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.dataset.active = 'false');
+      tab.dataset.active = 'true';
+      const target = tab.dataset.view;
+      panels.forEach(p => p.dataset.active = (p.dataset.view === target) ? 'true' : 'false');
+      fitScales();
+    });
   });
-  pauseBtn.addEventListener('click', () => {
-    if (gameRunning){ gameElapsedBase = gameElapsedNow(); }
-    gameRunning = false;
-    gameRunStart = null;
-    if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
-    renderGame();
+
+  function fitScales(){
+    ['BP', 'Rel'].forEach(s => {
+      const wrapper = document.getElementById('scaleWrapper' + s);
+      if (!wrapper) return;
+      const mat = wrapper.querySelector('.mat');
+      const scale = Math.min(1, wrapper.clientWidth / 1600);
+      mat.style.transform = `scale(${scale})`;
+      wrapper.style.height = (900 * scale) + 'px';
+    });
+  }
+  window.addEventListener('resize', fitScales);
+  fitScales();
+
+  // ---------- Image Upload & Block Actions ----------
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('block__remove')){
+      e.target.closest('.block').remove();
+      scheduleSave();
+    } else if (e.target.classList.contains('daycol__addbtn')){
+      const blocksWrap = e.target.previousElementSibling;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = blockHtml({ label: 'NEW BLOCK', body: 'Click to edit content' });
+      blocksWrap.appendChild(wrap.firstElementChild);
+      applyGlobalTypography();
+      scheduleSave();
+    } else if (e.target.classList.contains('block__addimg')){
+      const block = e.target.closest('.block');
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*';
+      input.addEventListener('change', () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          block.querySelector('.block__img').src = ev.target.result;
+          block.querySelector('.block__imgwrap').dataset.has = 'true';
+          scheduleSave();
+        };
+        reader.readAsDataURL(file);
+      });
+      input.click();
+    } else if (e.target.classList.contains('block__imgremove')){
+      const block = e.target.closest('.block');
+      block.querySelector('.block__img').src = '';
+      block.querySelector('.block__imgwrap').dataset.has = 'false';
+      scheduleSave();
+    }
   });
-  resetTimerBtn.addEventListener('click', () => {
-    gameRunning = false;
-    gameRunStart = null;
-    if (gameIntervalId){ clearInterval(gameIntervalId); gameIntervalId = null; }
-    gameDuration = readDurationInputs();
-    gameElapsedBase = 0;
-    renderGame();
-  });
-  [minInput, secInput].forEach(el => {
-    el.addEventListener('change', () => {
-      if (!gameRunning){
-        gameDuration = readDurationInputs();
-        gameElapsedBase = 0;
-        renderGame();
+
+  document.addEventListener('input', scheduleSave);
+
+  // ---------- Drag and Drop Rearranging ----------
+  let draggedCard = null;
+  document.querySelectorAll('.draggable-card').forEach(card => {
+    card.addEventListener('dragstart', (e) => {
+      draggedCard = card;
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!draggedCard || draggedCard === card) return;
+      const parent = card.parentNode;
+      const allCards = [...parent.children];
+      const draggedIdx = allCards.indexOf(draggedCard);
+      const targetIdx = allCards.indexOf(card);
+      if (draggedIdx < targetIdx) {
+        parent.insertBefore(draggedCard, card.nextSibling);
+      } else {
+        parent.insertBefore(draggedCard, card);
       }
+      scheduleSave();
     });
   });
-  document.querySelectorAll('.chip[data-preset]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mins = parseInt(btn.dataset.preset, 10);
-      minInput.value = mins; secInput.value = 0;
-      if (!gameRunning){
-        gameDuration = mins*60;
-        gameElapsedBase = 0;
-        renderGame();
-      }
-    });
-  });
-  timerLabel.addEventListener('input', renderGame);
-  renderGame();
 
-  // ---------- Stream stopwatch ----------
-  const streamClockDisplay = document.getElementById('streamClockDisplay');
-  const streamClockWrap = document.getElementById('streamClockWrap');
-  const streamStatusDot = document.getElementById('streamStatusDot');
-  const streamStartBtn = document.getElementById('streamStartBtn');
-  const streamPauseBtn = document.getElementById('streamPauseBtn');
-  const streamResetBtn = document.getElementById('streamResetBtn');
-  const logClockBadge = document.getElementById('logClockBadge');
-  const syncInput = document.getElementById('syncInput');
-  const syncBtn = document.getElementById('syncBtn');
-
-  let streamElapsedBase = 0;   // seconds banked from prior run segments
-  let streamRunStart = null;   // Date.now() when the current run segment began
-  let streamIntervalId = null;
-  let streamRunning = false;
-
-  function streamElapsedNow(){
-    if (streamRunning && streamRunStart){
-      return streamElapsedBase + Math.floor((Date.now() - streamRunStart) / 1000);
-    }
-    return streamElapsedBase;
-  }
-
-  function renderStream(){
-    const text = fmtLong(streamElapsedNow());
-    streamClockDisplay.textContent = text;
-    logClockBadge.textContent = text;
-    const state = streamRunning ? 'onair' : 'idle';
-    streamClockWrap.dataset.state = state;
-    streamStatusDot.dataset.state = state;
-    streamStatusDot.textContent = streamRunning ? 'On air' : 'Off air';
-    streamClockDisplay.classList.toggle('clock-display--live', streamRunning);
-  }
-
-  streamStartBtn.addEventListener('click', () => {
-    if (streamRunning) return;
-    streamRunning = true;
-    streamRunStart = Date.now();
-    streamIntervalId = setInterval(renderStream, 250);
-    renderStream();
-  });
-  streamPauseBtn.addEventListener('click', () => {
-    if (streamRunning){ streamElapsedBase = streamElapsedNow(); }
-    streamRunning = false;
-    streamRunStart = null;
-    if (streamIntervalId){ clearInterval(streamIntervalId); streamIntervalId = null; }
-    renderStream();
-  });
-  streamResetBtn.addEventListener('click', () => {
-    if (streamRunning || streamElapsedBase > 0){
-      if (!confirm('Reset the stream timer to 00:00:00?')) return;
-    }
-    streamRunning = false;
-    streamRunStart = null;
-    if (streamIntervalId){ clearInterval(streamIntervalId); streamIntervalId = null; }
-    streamElapsedBase = 0;
-    renderStream();
-  });
-
-  // ---------- sync to actual stream time ----------
-  function parseClockString(str){
-    const parts = str.trim().split(':').map(p => p.trim());
-    if (!parts.length || parts.some(p => p === '' || isNaN(Number(p)))) return null;
-    let h = 0, m = 0, s = 0;
-    if (parts.length === 3){ [h, m, s] = parts.map(Number); }
-    else if (parts.length === 2){ [m, s] = parts.map(Number); }
-    else if (parts.length === 1){ s = Number(parts[0]); }
-    else return null;
-    if (m > 59 || s > 59 || h < 0 || m < 0 || s < 0) return null;
-    return h*3600 + m*60 + s;
-  }
-
-  syncBtn.addEventListener('click', () => {
-    const seconds = parseClockString(syncInput.value);
-    if (seconds === null){
-      alert('Enter a time like 1:32:07 or 32:07 (matching what your streaming software/platform shows).');
-      return;
-    }
-    streamElapsedBase = seconds;
-    if (streamRunning){ streamRunStart = Date.now(); }
-    renderStream();
-    syncInput.value = '';
-  });
-  syncInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') syncBtn.click(); });
-
-  renderStream();
-
-  // ---------- Notes ----------
-  const noteInput = document.getElementById('noteInput');
-  const logBtn = document.getElementById('logBtn');
-  const markBtn = document.getElementById('markBtn');
-  const logList = document.getElementById('logList');
-  const logEmpty = document.getElementById('logEmpty');
-  const exportBtn = document.getElementById('exportBtn');
-  const clearLogBtn = document.getElementById('clearLogBtn');
-
-  let entries = [];
-
-  function renderLog(){
-    logList.innerHTML = '';
-    logEmpty.style.display = entries.length ? 'none' : 'block';
-    entries.forEach((entry, idx) => {
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <span class="log-list__time">${entry.time}</span>
-        <span class="log-list__note">${entry.note}</span>
-        <button class="log-list__del" data-idx="${idx}" aria-label="Delete entry">✕</button>
-      `;
-      logList.appendChild(li);
-    });
-    logList.scrollTop = logList.scrollHeight;
-  }
-  function escapeHtml(str){
-    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-  function addEntry(noteText){
-    entries.push({
-      time: fmtLong(streamElapsedNow()),
-      note: noteText ? escapeHtml(noteText) : '<em style="color:var(--mist)">Timestamp marker</em>'
-    });
-    renderLog();
-  }
-  function addNote(){
-    const val = noteInput.value.trim();
-    addEntry(val);
-    noteInput.value = '';
-  }
-  logBtn.addEventListener('click', addNote);
-  noteInput.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ addNote(); } });
-  markBtn.addEventListener('click', () => addEntry(''));
-  logList.addEventListener('click', (e) => {
-    if (e.target.classList.contains('log-list__del')){
-      const idx = parseInt(e.target.dataset.idx, 10);
-      entries.splice(idx, 1);
-      renderLog();
-    }
-  });
-  exportBtn.addEventListener('click', () => {
-    if (!entries.length){ alert('Nothing to export yet — log a note first.'); return; }
-    const now = new Date();
-    const stamp = now.toISOString().slice(0,10);
-    let text = `Stream Session Log — ${now.toLocaleString()}\n`;
-    text += '='.repeat(40) + '\n\n';
-    entries.forEach(e => {
-      const plainNote = e.note.includes('Timestamp marker') ? '(marker)' : e.note;
-      text += `[${e.time}]  ${plainNote}\n`;
-    });
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `stream-log-${stamp}.txt`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
-  clearLogBtn.addEventListener('click', () => {
-    if (!entries.length) return;
-    if (confirm('Clear the whole session log? This can\'t be undone.')){ entries = []; renderLog(); }
-  });
-  renderLog();
-
-  // ---------- palette ----------
+  // ---------- Palette Controls ----------
   const PRESETS = [
-    { name:'Crimson', hex:'#e21f2d' },
-    { name:'Cyan',    hex:'#1fd0e2' },
-    { name:'Violet',  hex:'#a239f2' },
-    { name:'Amber',   hex:'#f2a71f' },
-    { name:'Emerald', hex:'#1fe27a' },
-    { name:'Mono',    hex:'#d8d5da' }
+    { name:'Crimson', hex:'#e21f2d' }, { name:'Cyan', hex:'#1fd0e2' },
+    { name:'Violet', hex:'#a239f2' }, { name:'Amber', hex:'#f2a71f' },
+    { name:'Emerald', hex:'#1fe27a' }, { name:'Mono', hex:'#d8d5da' }
   ];
   const swatchesEl = document.getElementById('swatches');
   const customColorEl = document.getElementById('customColor');
 
-  function hexToRgb(hex){
-    hex = hex.replace('#','');
-    if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
-    const num = parseInt(hex, 16);
-    return [ (num>>16)&255, (num>>8)&255, num&255 ];
-  }
   function applyPalette(hex, fromSwatch){
-    const [r,g,b] = hexToRgb(hex);
+    hex = hex || '#e21f2d';
+    const num = parseInt(hex.replace('#',''), 16);
+    const r = (num>>16)&255, g = (num>>8)&255, b = num&255;
     const root = document.documentElement.style;
     root.setProperty('--red', hex);
     root.setProperty('--red-fill', `rgba(${r},${g},${b},0.18)`);
@@ -696,18 +702,425 @@
     document.querySelectorAll('.swatch').forEach(s => {
       s.dataset.active = (fromSwatch && s.dataset.hex === hex) ? 'true' : 'false';
     });
+    scheduleSave();
   }
-  PRESETS.forEach((p, i) => {
+
+  PRESETS.forEach((p) => {
     const btn = document.createElement('button');
-    btn.className = 'swatch';
-    btn.style.background = p.hex;
-    btn.dataset.hex = p.hex;
-    btn.title = p.name;
-    btn.dataset.active = i === 0 ? 'true' : 'false';
+    btn.className = 'swatch'; btn.style.background = p.hex; btn.dataset.hex = p.hex;
     btn.addEventListener('click', () => applyPalette(p.hex, true));
     swatchesEl.appendChild(btn);
   });
   customColorEl.addEventListener('input', (e) => applyPalette(e.target.value, false));
+
+  // ---------- Zero-Config Twitch Username Sync ----------
+  let currentUsername = localStorage.getItem('twitch_username') || '';
+  let channelPollInterval = null;
+
+  const usernameInput = document.getElementById('twitchUsernameInput');
+  const connectBtn = document.getElementById('connectUsernameBtn');
+  const disconnectBtn = document.getElementById('disconnectUsernameBtn');
+  const authStatusBadge = document.getElementById('authStatusBadge');
+  const userDisplay = document.getElementById('twitchUserDisplay');
+  const liveViewerCountEl = document.getElementById('liveViewerCount');
+
+  if (currentUsername) usernameInput.value = currentUsername;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (currentUsername) {
+      updateUsernameUI();
+      startChannelPolling();
+    }
+  });
+
+  connectBtn.addEventListener('click', () => {
+    const uname = usernameInput.value.trim().toLowerCase();
+    if (!uname) return alert('Please enter your Twitch username.');
+    currentUsername = uname;
+    localStorage.setItem('twitch_username', currentUsername);
+    updateUsernameUI();
+    startChannelPolling();
+  });
+
+  disconnectBtn.addEventListener('click', () => {
+    currentUsername = '';
+    localStorage.removeItem('twitch_username');
+    if (channelPollInterval) clearInterval(channelPollInterval);
+    liveViewerCountEl.textContent = '--';
+    updateUsernameUI();
+  });
+
+  function updateUsernameUI() {
+    if (currentUsername) {
+      authStatusBadge.textContent = 'Connected';
+      authStatusBadge.style.color = 'var(--red)';
+      userDisplay.textContent = `@${currentUsername}`;
+      connectBtn.style.display = 'none';
+      usernameInput.style.display = 'none';
+      disconnectBtn.style.display = 'inline-block';
+    } else {
+      authStatusBadge.textContent = 'Not Connected';
+      authStatusBadge.style.color = 'var(--mist)';
+      userDisplay.textContent = '';
+      connectBtn.style.display = 'inline-block';
+      usernameInput.style.display = 'inline-block';
+      disconnectBtn.style.display = 'none';
+    }
+  }
+
+  function startChannelPolling() {
+    if (channelPollInterval) clearInterval(channelPollInterval);
+    pollChannelData();
+    channelPollInterval = setInterval(pollChannelData, 30000);
+  }
+
+  async function pollChannelData() {
+    if (!currentUsername) return;
+    try {
+      // Using public Decapi endpoints for zero-config username stat lookups
+      const viewerRes = await fetch(`https://decapi.me/twitch/viewers/${currentUsername}`);
+      if (viewerRes.ok) {
+        const text = await viewerRes.text();
+        if (!text.includes('no response') && !text.includes('offline')) {
+          liveViewerCountEl.textContent = text;
+        } else {
+          liveViewerCountEl.textContent = 'Offline';
+        }
+      }
+
+      const uptimeRes = await fetch(`https://decapi.me/twitch/uptime/${currentUsername}`);
+      if (uptimeRes.ok) {
+        const uptimeText = await uptimeRes.text();
+        if (uptimeText && !uptimeText.includes('offline') && !uptimeText.includes('is offline')) {
+          // If online, attempt to sync elapsed timer if not already running
+          document.getElementById('streamStatusDot').textContent = 'On Air';
+        } else {
+          document.getElementById('streamStatusDot').textContent = 'Off Air';
+        }
+      }
+    } catch (e) {
+      console.error('Channel poll error:', e);
+    }
+  }
+
+  // ---------- Stream Control Desk Logic ----------
+  let activeAlarmInterval = null;
+
+  function playBeep(type = 'warning') {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      if (type === 'alarm') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(1760, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+
+        if (!activeAlarmInterval) {
+          activeAlarmInterval = setInterval(() => playBeep('alarm'), 600);
+          document.getElementById('dismissAlarmBtn').style.display = 'inline-block';
+        }
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+    } catch(e) {}
+  }
+
+  function dismissAlarm() {
+    if (activeAlarmInterval) {
+      clearInterval(activeAlarmInterval);
+      activeAlarmInterval = null;
+    }
+    document.getElementById('dismissAlarmBtn').style.display = 'none';
+  }
+
+  document.getElementById('dismissAlarmBtn').addEventListener('click', dismissAlarm);
+
+  let gameDuration = 7200, gameElapsed = 0, gameStart = null, gameTimer = null, gameRunning = false, lastBeepTriggered = null;
+  const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  const fmtLong = s => {
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  };
+
+  function renderGameClock(){
+    const currentElapsed = gameRunning && gameStart ? gameElapsed + Math.floor((Date.now() - gameStart)/1000) : gameElapsed;
+    const rem = Math.max(gameDuration - currentElapsed, 0);
+    document.getElementById('gameClockDisplay').textContent = fmt(rem);
+    const state = rem <= 0 ? 'live' : (gameRunning ? 'running' : 'idle');
+    document.getElementById('gameClockWrap').dataset.state = state;
+    document.getElementById('gameStatusDot').textContent = state === 'live' ? 'Switch Now' : state;
+
+    if (gameRunning) {
+      if (rem === 300 && lastBeepTriggered !== 300) {
+        playBeep('warning');
+        lastBeepTriggered = 300;
+      }
+      if (rem === 0 && lastBeepTriggered !== 0) {
+        playBeep('alarm');
+        lastBeepTriggered = 0;
+        gameRunning = false; 
+        clearInterval(gameTimer);
+      }
+    }
+  }
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    if(gameRunning) return;
+    dismissAlarm();
+    gameRunning = true; gameStart = Date.now();
+    gameTimer = setInterval(renderGameClock, 250);
+  });
+  document.getElementById('pauseBtn').addEventListener('click', () => {
+    if(gameRunning) gameElapsed += Math.floor((Date.now() - gameStart)/1000);
+    gameRunning = false; clearInterval(gameTimer); renderGameClock();
+  });
+  document.getElementById('resetTimerBtn').addEventListener('click', () => {
+    dismissAlarm();
+    gameRunning = false; clearInterval(gameTimer); gameElapsed = 0; lastBeepTriggered = null;
+    const m = parseInt(document.getElementById('minInput').value || 0);
+    const s = parseInt(document.getElementById('secInput').value || 0);
+    gameDuration = m * 60 + s; renderGameClock();
+  });
+
+  document.querySelectorAll('.timer-block .chip[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      dismissAlarm();
+      const mins = parseInt(btn.dataset.preset);
+      document.getElementById('minInput').value = mins;
+      document.getElementById('secInput').value = 0;
+      gameRunning = false; clearInterval(gameTimer); gameElapsed = 0; lastBeepTriggered = null;
+      gameDuration = mins * 60;
+      renderGameClock();
+    });
+  });
+
+  // Stream Stopwatch & Notes
+  let streamElapsed = 0, streamStart = null, streamTimer = null, streamRunning = false, entries = [];
+  function renderStreamClock(){
+    const cur = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
+    const tStr = fmtLong(cur);
+    document.getElementById('streamClockDisplay').textContent = tStr;
+    document.getElementById('logClockBadge').textContent = tStr + ' ⟳';
+  }
+
+  document.getElementById('streamStartBtn').addEventListener('click', () => {
+    if (currentUsername) pollChannelData();
+    if(!streamRunning) {
+      streamRunning = true; 
+      streamStart = Date.now() - (streamElapsed * 1000);
+      if(!streamTimer) streamTimer = setInterval(renderStreamClock, 250);
+    }
+  });
+  document.getElementById('streamPauseBtn').addEventListener('click', () => {
+    if(streamRunning) streamElapsed += Math.floor((Date.now() - streamStart)/1000);
+    streamRunning = false; clearInterval(streamTimer); streamTimer = null; renderStreamClock();
+  });
+  document.getElementById('streamResetBtn').addEventListener('click', () => {
+    if(confirm('Reset stream stopwatch?')){
+      streamRunning = false; clearInterval(streamTimer); streamTimer = null; streamElapsed = 0; renderStreamClock();
+    }
+  });
+
+  function parseTimeToSeconds(str) {
+    str = (str || '').trim();
+    const parts = str.split(':').map(p => parseInt(p, 10));
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2 && !parts.some(isNaN)) {
+      return parts[0] * 60 + parts[1];
+    } else {
+      const num = parseInt(str, 10);
+      return isNaN(num) ? 0 : num * 60;
+    }
+  }
+
+  document.getElementById('streamSetTimeBtn').addEventListener('click', () => {
+    const val = document.getElementById('manualTimeInput').value;
+    const totalSecs = parseTimeToSeconds(val);
+    streamElapsed = Math.max(0, totalSecs);
+    if (streamRunning) {
+      streamStart = Date.now();
+    }
+    renderStreamClock();
+    document.getElementById('manualTimeInput').value = '';
+  });
+
+  document.getElementById('logClockBadge').addEventListener('click', () => {
+    const cur = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
+    const tStr = fmtLong(cur);
+    const noteInput = document.getElementById('noteInput');
+    noteInput.value = `[${tStr}] ` + noteInput.value;
+    noteInput.focus();
+  });
+
+  function addLogNote(text){
+    const cur = (streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed);
+    entries.push({ time: fmtLong(cur), note: text ? esc(text) : '<em>Timestamp marker</em>' });
+    renderLog();
+  }
+  function renderLog(){
+    const list = document.getElementById('logList');
+    list.innerHTML = entries.map((e, i) => `<li><span class="log-list__time">${e.time}</span><span class="log-list__note">${e.note}</span><button class="log-list__del" onclick="entries.splice(${i},1);renderLog()">✕</button></li>`).join('');
+    document.getElementById('logEmpty').style.display = entries.length ? 'none' : 'block';
+  }
+  document.getElementById('logBtn').addEventListener('click', () => { const inp = document.getElementById('noteInput'); addLogNote(inp.value); inp.value=''; });
+  document.getElementById('markBtn').addEventListener('click', () => addLogNote(''));
+  document.getElementById('clearLogBtn').addEventListener('click', () => { entries = []; renderLog(); });
+  document.getElementById('exportLogBtn').addEventListener('click', () => {
+    if(!entries.length) return alert('No notes to export.');
+    const text = entries.map(e => `[${e.time}] ${e.note.replace(/<[^>]*>/g,'')}`).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+    a.download = 'stream-session-log.txt'; a.click();
+  });
+
+  // Simultaneous F13 + F24 Key Tracker
+  const pressedKeys = {};
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F13' || e.code === 'F13') pressedKeys['F13'] = true;
+    if (e.key === 'F24' || e.code === 'F24') pressedKeys['F24'] = true;
+    
+    if (pressedKeys['F13'] && pressedKeys['F24']) {
+      e.preventDefault();
+      addLogNote('');
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'F13' || e.code === 'F13') pressedKeys['F13'] = false;
+    if (e.key === 'F24' || e.code === 'F24') pressedKeys['F24'] = false;
+  });
+
+  // ---------- Export Active Mat ----------
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    const activeTab = document.querySelector('.tab[data-active="true"]').dataset.view;
+    if(activeTab === 'controldesk') return alert('Switch to Weekly Blueprint or Content Schedule to export as a mat PNG.');
+    const mat = activeTab === 'blueprint' ? matBlueprint : matRelease;
+    const prevTransform = mat.style.transform;
+    mat.style.transform = 'none';
+    mat.classList.add('is-exporting');
+
+    await document.fonts.ready;
+    await new Promise(r => requestAnimationFrame(r));
+    try{
+      const canvas = await html2canvas(mat, { backgroundColor:'#0a0a0c', scale:1.2, useCORS:true });
+      const a = document.createElement('a'); a.download = mat.dataset.matname + '.png';
+      a.href = canvas.toDataURL('image/png'); a.click();
+    }catch(e){ alert('Export failed: ' + e.message); }
+    finally{ 
+      mat.classList.remove('is-exporting');
+      mat.style.transform = prevTransform; 
+      fitScales(); 
+    }
+  });
+
+  // ---------- Workspace Layout Profiles ----------
+  const profileSelect = document.getElementById('profileSelect');
+  document.getElementById('saveProfileBtn').addEventListener('click', () => {
+    const profileKey = 'ccc-profile-' + profileSelect.value;
+    const layoutState = {
+      cardOrder: [...document.querySelectorAll('.draggable-card')].map(c => c.id),
+      cardStyles: [...document.querySelectorAll('.desk-card, .sticky-card')].map(c => ({ id: c.id, width: c.style.width, height: c.style.height }))
+    };
+    localStorage.setItem(profileKey, JSON.stringify(layoutState));
+    alert('Layout profile saved successfully!');
+  });
+
+  profileSelect.addEventListener('change', () => {
+    const saved = localStorage.getItem('ccc-profile-' + profileSelect.value);
+    if (!saved) return;
+    try {
+      const state = JSON.parse(saved);
+      state.cardOrder.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.parentElement) el.parentElement.appendChild(el);
+      });
+      state.cardStyles.forEach(st => {
+        const el = document.getElementById(st.id);
+        if (el) {
+          if (st.width) el.style.width = st.width;
+          if (st.height) el.style.height = st.height;
+        }
+      });
+    } catch(e) {}
+  });
+
+  // ---------- LocalStorage Persistence ----------
+  function serializeMat(container){
+    return {
+      title: container.querySelector('.mat-title').innerText.trim(),
+      meta: container.querySelector('.mat-meta').innerText.trim(),
+      columns: [...container.querySelectorAll('.daycol')].map(col => ({
+        day: col.querySelector('.daycol__day').innerText.trim(),
+        subtitle: col.querySelector('.daycol__subtitle').innerText.trim(),
+        blocks: [...col.querySelectorAll('.block')].map(b => ({
+          label: b.querySelector('.block__label').innerText.trim(),
+          body: b.querySelector('.block__body').innerText.trim(),
+          img: b.querySelector('.block__imgwrap').dataset.has === 'true' ? b.querySelector('.block__img').src : null
+        }))
+      }))
+    };
+  }
+
+  function scheduleSave(){
+    try{
+      localStorage.setItem('ccc-bp', JSON.stringify(serializeMat(matBlueprint)));
+      localStorage.setItem('ccc-rel', JSON.stringify(serializeMat(matRelease)));
+      localStorage.setItem('ccc-palette', document.documentElement.style.getPropertyValue('--red'));
+      localStorage.setItem('ccc-global-font', globalFontSelect.value);
+      localStorage.setItem('ccc-global-size', globalSizeSelect.value);
+      localStorage.setItem('ccc-sticky-title', document.querySelector('.sticky-card__title').value);
+      localStorage.setItem('ccc-sticky-text', stickyBody.value);
+    }catch(e){}
+  }
+
+  function loadAll(){
+    try{
+      const bp = JSON.parse(localStorage.getItem('ccc-bp'));
+      const rel = JSON.parse(localStorage.getItem('ccc-rel'));
+      if(bp) renderMat(matBlueprint, bp);
+      if(rel) renderMat(matRelease, rel);
+      applyPalette(localStorage.getItem('ccc-palette'), true);
+      
+      const gFont = localStorage.getItem('ccc-global-font');
+      const gSize = localStorage.getItem('ccc-global-size');
+      const sTitle = localStorage.getItem('ccc-sticky-title');
+      const sText = localStorage.getItem('ccc-sticky-text');
+      if(gFont) globalFontSelect.value = gFont;
+      if(gSize) globalSizeSelect.value = gSize;
+      applyGlobalTypography();
+
+      if(sTitle) document.querySelector('.sticky-card__title').value = sTitle;
+      if(sText) stickyBody.value = sText;
+    }catch(e){}
+    fitScales();
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('Reset all content, notes, and palettes to default?')){
+      localStorage.clear();
+      renderMat(matBlueprint, blueprintData);
+      renderMat(matRelease, releaseData);
+      applyPalette('#e21f2d', true);
+      globalFontSelect.selectedIndex = 0; globalSizeSelect.selectedIndex = 2;
+      applyGlobalTypography();
+      stickyBody.value = "";
+      fitScales();
+    }
+  });
+
+  loadAll();
 </script>
 </body>
 </html>
