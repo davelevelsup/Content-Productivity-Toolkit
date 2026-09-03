@@ -193,15 +193,13 @@
   }
   .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
 
-  /* ---------- Stream Control Desk Layout ---------- */
+  /* ---------- Stream Control Desk Layout & Multi-column Gap Fix ---------- */
   .desk-container { display:flex; flex-direction:column; gap:16px; margin-top:10px; }
   .desk-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); 
-    gap: 16px; 
-    align-items: start;
+    column-count: 2;
+    column-gap: 16px;
   }
-  @media (max-width: 860px) { .desk-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .desk-grid { column-count: 1; } }
 
   .desk-card, .sticky-card {
     background: var(--panel); 
@@ -210,7 +208,14 @@
     padding: 20px 22px;
     width: 100%;
     position: relative;
+    break-inside: avoid;
+    margin-bottom: 16px;
+    display: inline-block;
   }
+  .desk-card.span-full, .sticky-card.span-full {
+    column-span: all;
+  }
+
   .sticky-card { background: var(--panel-raised); }
   .sticky-card::before{
     content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%); width:14px; height:14px; border-radius:50%; background:var(--red);
@@ -218,7 +223,7 @@
 
   .desk-card__header, .sticky-card__header-bar {
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
-    border-bottom: 1px dashed var(--hairline); padding-bottom: 8px;
+    border-bottom: 1px dashed var(--hairline); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;
   }
   .card-reorder-controls { display: flex; gap: 4px; align-items: center; }
   .reorder-btn {
@@ -246,7 +251,7 @@
   }
   input[type="number"]:focus, input[type="text"]:focus, textarea:focus{ outline:2px solid var(--red); border-color:transparent; }
   
-  .sticky-card__title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; text-transform:uppercase; background:transparent; border:none; color:var(--red); width:100%; outline:none; }
+  .sticky-card__title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; text-transform:uppercase; background:transparent; border:none; color:var(--red); width:100%; outline:none; max-width: 260px; }
   .sticky-card__body{ background:transparent; border:1px solid var(--hairline); border-radius:6px; resize:vertical; flex:1; font-size:13px; color:var(--ash); line-height:1.5; min-height: 120px; padding:10px; width:100%; }
 
   .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -325,37 +330,44 @@
   <div class="view-panel" data-view="controldesk">
     <div class="desk-container">
       
-      <div class="desk-card" data-card-id="twitch-config">
-        <div class="desk-card__header">
-          <div>
-            <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Twitch Channel Connection</p>
-            <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Just type your channel username—zero developer console setup required</p>
+      <div class="desk-grid" id="unifiedDeskGrid">
+        
+        <div class="desk-card" data-card-id="twitch-config">
+          <div class="desk-card__header">
+            <div>
+              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Twitch Channel Connection</p>
+              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Zero developer console setup required</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span id="authStatusBadge" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Not Connected</span>
+              <div class="card-reorder-controls">
+                <button class="reorder-btn shift-left" title="Move Left">◄</button>
+                <button class="reorder-btn shift-right" title="Move Right">►</button>
+                <button class="reorder-btn size-toggle" title="Toggle Size (Half/Full)">⤢</button>
+              </div>
+            </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span id="authStatusBadge" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Not Connected</span>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="twitchUsernameInput" placeholder="e.g. davelevelsup" style="width:240px;">
+            <button class="action-btn" id="connectUsernameBtn">Connect Channel</button>
+            <button class="action-btn ghost" id="disconnectUsernameBtn" style="display:none; color:var(--red); border-color:var(--red);">Disconnect</button>
+            <span id="twitchUserDisplay" style="font-family:'Space Mono',monospace; font-size:12px; color:var(--red);"></span>
           </div>
         </div>
-        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-          <input type="text" id="twitchUsernameInput" placeholder="e.g. davelevelsup" style="width:240px;">
-          <button class="action-btn" id="connectUsernameBtn">Connect Channel</button>
-          <button class="action-btn ghost" id="disconnectUsernameBtn" style="display:none; color:var(--red); border-color:var(--red);">Disconnect</button>
-          <span id="twitchUserDisplay" style="font-family:'Space Mono',monospace; font-size:12px; color:var(--red);"></span>
-        </div>
-      </div>
 
-      <div class="desk-grid" id="topDeskGrid">
         <div class="desk-card" data-card-id="game-switch">
           <div class="desk-card__header">
             <div>
               <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Game Switch Cue</p>
-              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Countdown to your next transition</p>
+              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Countdown to transition</p>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="gameStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Idle</span>
               <div class="card-reorder-controls">
                 <button class="reorder-btn shift-left" title="Move Left">◄</button>
                 <button class="reorder-btn shift-right" title="Move Right">►</button>
+                <button class="reorder-btn size-toggle" title="Toggle Size (Half/Full)">⤢</button>
               </div>
-              <span id="gameStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Idle</span>
             </div>
           </div>
           <div class="timer-block">
@@ -399,59 +411,65 @@
             <div class="card-reorder-controls">
               <button class="reorder-btn shift-left" title="Move Left">◄</button>
               <button class="reorder-btn shift-right" title="Move Right">►</button>
+              <button class="reorder-btn size-toggle" title="Toggle Size (Half/Full)">⤢</button>
             </div>
           </div>
           <textarea class="sticky-card__body" id="stickyBody" placeholder="Goals, cues, or reminders for mid-stream..."></textarea>
         </div>
-      </div>
 
-      <div class="desk-card" data-card-id="stream-stopwatch">
-        <div class="desk-card__header">
-          <div>
-            <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Stream Stopwatch & Live Stats</p>
-            <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Auto-syncs uptime via public channel lookup • Live viewer counter active</p>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="font-family:'Rajdhani',sans-serif; font-size:12px; background:var(--void); border:1px solid var(--hairline); border-radius:4px; padding:4px 8px;">
-              Viewers: <span id="liveViewerCount" style="font-family:'Space Mono',monospace; color:var(--red); font-weight:700;">--</span>
+        <div class="desk-card" data-card-id="stream-stopwatch">
+          <div class="desk-card__header">
+            <div>
+              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Stream Stopwatch & Live Stats</p>
+              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Auto-syncs uptime via public channel lookup • Live viewer counter active</p>
             </div>
-            <span id="streamStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Off air</span>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="font-family:'Rajdhani',sans-serif; font-size:12px; background:var(--void); border:1px solid var(--hairline); border-radius:4px; padding:4px 8px;">
+                Viewers: <span id="liveViewerCount" style="font-family:'Space Mono',monospace; color:var(--red); font-weight:700;">--</span>
+              </div>
+              <span id="streamStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Off air</span>
+              <div class="card-reorder-controls">
+                <button class="reorder-btn shift-left" title="Move Left">◄</button>
+                <button class="reorder-btn shift-right" title="Move Right">►</button>
+                <button class="reorder-btn size-toggle" title="Toggle Size (Half/Full)">⤢</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+            <div class="clockwrap" id="streamClockWrap">
+              <div class="clock-display" id="streamClockDisplay">00:00:00</div>
+              <div class="clock-label-under">Elapsed stream time (Username Synced)</div>
+            </div>
+            <div class="chip-row" style="align-items:center;">
+              <button class="action-btn" id="streamStartBtn">Go Live / Force Sync</button>
+              <button class="action-btn ghost" id="streamPauseBtn">Pause</button>
+              <button class="action-btn ghost" id="streamResetBtn">Reset</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:6px 10px;">
+              <label class="small-label" for="manualTimeInput" style="margin:0;">Set Time:</label>
+              <input type="text" id="manualTimeInput" placeholder="00:15:00" style="width:85px; text-align:center;">
+              <button class="action-btn small" id="streamSetTimeBtn">Apply</button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+            <span id="logClockBadge" title="Click to sync/insert current time into note input" style="font-family:'Space Mono',monospace; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:9px 12px; color:var(--red); cursor:pointer;">00:00:00 ⟳</span>
+            <input type="text" id="noteInput" placeholder="Add chapter note (elapsed time auto-syncs on click)..." style="flex:1; min-width:220px;">
+            <button class="action-btn" id="logBtn">Add Note</button>
+            <button class="action-btn ghost" id="markBtn">Mark ⏱ (F13+F24)</button>
+          </div>
+
+          <ul class="log-list" id="logList"></ul>
+          <p id="logEmpty" style="color:var(--mist); font-size:13px; text-align:center; padding:12px 0;">No notes or chapter markers logged yet.</p>
+
+          <div style="display:flex; gap:10px; margin-top:14px;">
+            <button class="action-btn ghost" id="exportLogBtn">Export Log (.txt)</button>
+            <button class="action-btn ghost" id="clearLogBtn" style="color:var(--red); border-color:var(--red);">Clear Log</button>
           </div>
         </div>
 
-        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
-          <div class="clockwrap" id="streamClockWrap">
-            <div class="clock-display" id="streamClockDisplay">00:00:00</div>
-            <div class="clock-label-under">Elapsed stream time (Username Synced)</div>
-          </div>
-          <div class="chip-row" style="align-items:center;">
-            <button class="action-btn" id="streamStartBtn">Go Live / Force Sync</button>
-            <button class="action-btn ghost" id="streamPauseBtn">Pause</button>
-            <button class="action-btn ghost" id="streamResetBtn">Reset</button>
-          </div>
-          <div style="display:flex; align-items:center; gap:6px; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:6px 10px;">
-            <label class="small-label" for="manualTimeInput" style="margin:0;">Set Time:</label>
-            <input type="text" id="manualTimeInput" placeholder="00:15:00" style="width:85px; text-align:center;">
-            <button class="action-btn small" id="streamSetTimeBtn">Apply</button>
-          </div>
-        </div>
-
-        <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-          <span id="logClockBadge" title="Click to sync/insert current time into note input" style="font-family:'Space Mono',monospace; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:9px 12px; color:var(--red); cursor:pointer;">00:00:00 ⟳</span>
-          <input type="text" id="noteInput" placeholder="Add chapter note (elapsed time auto-syncs on click)..." style="flex:1; min-width:220px;">
-          <button class="action-btn" id="logBtn">Add Note</button>
-          <button class="action-btn ghost" id="markBtn">Mark ⏱ (F13+F24)</button>
-        </div>
-
-        <ul class="log-list" id="logList"></ul>
-        <p id="logEmpty" style="color:var(--mist); font-size:13px; text-align:center; padding:12px 0;">No notes or chapter markers logged yet.</p>
-
-        <div style="display:flex; gap:10px; margin-top:14px;">
-          <button class="action-btn ghost" id="exportLogBtn">Export Log (.txt)</button>
-          <button class="action-btn ghost" id="clearLogBtn" style="color:var(--red); border-color:var(--red);">Clear Log</button>
-        </div>
       </div>
-
     </div>
   </div>
 
@@ -603,8 +621,8 @@
   window.addEventListener('load', fitScales);
   setTimeout(fitScales, 50);
 
-  // Safe Top Grid Card Reordering
-  document.querySelectorAll('#topDeskGrid .shift-left').forEach(btn => {
+  // Multi-column Desk Card Reordering & Size Toggle
+  document.querySelectorAll('#unifiedDeskGrid .shift-left').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const card = e.target.closest('.desk-card, .sticky-card');
       const parent = card.parentElement;
@@ -615,7 +633,7 @@
     });
   });
 
-  document.querySelectorAll('#topDeskGrid .shift-right').forEach(btn => {
+  document.querySelectorAll('#unifiedDeskGrid .shift-right').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const card = e.target.closest('.desk-card, .sticky-card');
       const parent = card.parentElement;
@@ -623,6 +641,14 @@
         parent.insertBefore(card.nextElementSibling, card);
         scheduleSave();
       }
+    });
+  });
+
+  document.querySelectorAll('#unifiedDeskGrid .size-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('.desk-card, .sticky-card');
+      card.classList.toggle('span-full');
+      scheduleSave();
     });
   });
 
@@ -1026,8 +1052,11 @@
       localStorage.setItem('ccc-sticky-title', document.querySelector('.sticky-card__title').value);
       localStorage.setItem('ccc-sticky-text', stickyBody.value);
 
-      const topOrder = [...document.querySelectorAll('#topDeskGrid .desk-card, #topDeskGrid .sticky-card')].map(c => c.dataset.cardId);
-      localStorage.setItem('ccc-top-order', JSON.stringify(topOrder));
+      const deskLayout = [...document.querySelectorAll('#unifiedDeskGrid .desk-card, #unifiedDeskGrid .sticky-card')].map(c => ({
+        id: c.dataset.cardId,
+        isFull: c.classList.contains('span-full')
+      }));
+      localStorage.setItem('ccc-desk-layout', JSON.stringify(deskLayout));
     }catch(e){}
   }
 
@@ -1050,12 +1079,16 @@
       if(sTitle) document.querySelector('.sticky-card__title').value = sTitle;
       if(sText) stickyBody.value = sText;
 
-      const topOrder = JSON.parse(localStorage.getItem('ccc-top-order'));
-      if (topOrder) {
-        const grid = document.getElementById('topDeskGrid');
-        topOrder.forEach(id => {
-          const card = grid.querySelector(`[data-card-id="${id}"]`);
-          if (card) grid.appendChild(card);
+      const deskLayout = JSON.parse(localStorage.getItem('ccc-desk-layout'));
+      if (deskLayout) {
+        const grid = document.getElementById('unifiedDeskGrid');
+        deskLayout.forEach(item => {
+          const card = grid.querySelector(`[data-card-id="${item.id}"]`);
+          if (card) {
+            if (item.isFull) card.classList.add('span-full');
+            else card.classList.remove('span-full');
+            grid.appendChild(card);
+          }
         });
       }
     }catch(e){}
@@ -1063,7 +1096,7 @@
   }
 
   document.getElementById('resetBtn').addEventListener('click', () => {
-    if(confirm('Reset all content, notes, and palettes to default?')){
+    if(confirm('Reset all content, notes, and layout customizations to default?')){
       localStorage.clear();
       renderMat(matBlueprint, blueprintData);
       renderMat(matRelease, releaseData);
@@ -1071,6 +1104,7 @@
       globalFontSelect.selectedIndex = 0; globalSizeSelect.selectedIndex = 2;
       applyGlobalTypography();
       stickyBody.value = "";
+      document.querySelectorAll('#unifiedDeskGrid .desk-card, #unifiedDeskGrid .sticky-card').forEach(c => c.classList.remove('span-full'));
       fitScales();
     }
   });
