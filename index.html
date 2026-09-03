@@ -83,7 +83,7 @@
   .view-panel[data-active="true"]{ display:block; }
 
   /* ---------- Planning Mat Styling (16:9 Scaled) ---------- */
-  .mat-scale-wrapper{ position:relative; width:100%; overflow:hidden; }
+  .mat-scale-wrapper{ position:relative; width:100%; overflow:hidden; min-height: 450px; }
   .mat{
     width:1600px; height:900px;
     background:var(--void); border:2px solid var(--red); border-radius:6px;
@@ -163,4 +163,919 @@
   }
   
   .block__imgwrap{
-    position:relative; width:100%; display:none; background:rgba
+    position:relative; width:100%; display:none; background:rgba(0,0,0,.3);
+    border-bottom:1px solid var(--hairline); overflow:hidden;
+  }
+  .block__imgwrap[data-has="true"]{ display:block; }
+  .block__img{ width:100%; height:110px; object-fit:cover; display:block; }
+  .block__imgremove{
+    position:absolute; top:4px; right:4px; width:16px; height:16px;
+    background:rgba(0,0,0,0.7); color:var(--mist); border:none; border-radius:50%;
+    font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:4;
+  }
+  .block__imgremove:hover{ color:var(--red); }
+
+  .block__body{
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:8px 7px; outline:none; min-height:36px;
+  }
+  [contenteditable="true"]:hover{ background:rgba(226,31,45,.06); }
+  [contenteditable="true"]:focus{ background:rgba(226,31,45,.12); }
+
+  .block__addimg{
+    width:100%; background:transparent; border:none; border-top:1px dashed var(--hairline);
+    color:var(--mist); font-family:'Rajdhani',sans-serif; font-size:9.5px; text-transform:uppercase; padding:3px 0; cursor:pointer;
+  }
+  .block__addimg:hover{ color:var(--red); }
+  .daycol__addbtn{
+    margin-top:6px; width:100%; background:transparent; border:1px dashed var(--hairline);
+    color:var(--mist); font-family:'Rajdhani',sans-serif; font-size:10.5px; text-transform:uppercase; border-radius:3px; padding:5px 0; cursor:pointer;
+  }
+  .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
+
+  /* ---------- Stream Control Desk Layout ---------- */
+  .desk-container { display:flex; flex-direction:column; gap:16px; margin-top:10px; }
+  .desk-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); 
+    gap: 16px; 
+    align-items: start;
+  }
+  @media (max-width: 860px) { .desk-grid { grid-template-columns: 1fr; } }
+
+  .desk-card, .sticky-card {
+    background: var(--panel); 
+    border: 1px solid var(--hairline); 
+    border-radius: 6px; 
+    padding: 20px 22px;
+    width: 100%;
+    position: relative;
+  }
+  .sticky-card { background: var(--panel-raised); }
+  .sticky-card::before{
+    content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%); width:14px; height:14px; border-radius:50%; background:var(--red);
+  }
+
+  .desk-card__header, .sticky-card__header-bar {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    border-bottom: 1px dashed var(--hairline); padding-bottom: 8px;
+  }
+  .card-reorder-controls { display: flex; gap: 4px; align-items: center; }
+  .reorder-btn {
+    background: var(--void); border: 1px solid var(--hairline); color: var(--mist);
+    width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .reorder-btn:hover { color: var(--red); border-color: var(--red); }
+
+  .timer-block{ display:flex; flex-direction:column; gap:14px; height:100%; }
+  .clockwrap{
+    align-self:flex-start; border:2px solid var(--hairline); border-radius:12px;
+    padding:14px 20px; background:var(--panel-raised); text-align:center; transition:border-color .25s ease;
+  }
+  .clockwrap[data-state="running"], .clockwrap[data-state="live"], .clockwrap[data-state="onair"]{ border-color:var(--red); }
+  .clock-display{ font-family:'Space Mono',monospace; font-weight:700; font-size:38px; color:var(--ash); }
+  .clock-display--live{ color:var(--red); }
+  .clock-label-under{ margin-top:4px; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mist); font-family:'Rajdhani',sans-serif; font-weight:600; }
+
+  .field-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  label.small-label{ font-family:'Rajdhani',sans-serif; font-weight:600; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--mist); display:block; margin-bottom:4px; }
+  input[type="number"], input[type="text"], textarea{
+    background:var(--void); border:1px solid var(--hairline); color:var(--ash);
+    border-radius:6px; padding:9px 11px; font-family:'Inter', sans-serif; font-size:13px;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, textarea:focus{ outline:2px solid var(--red); border-color:transparent; }
+  
+  .sticky-card__title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; text-transform:uppercase; background:transparent; border:none; color:var(--red); width:100%; outline:none; }
+  .sticky-card__body{ background:transparent; border:1px solid var(--hairline); border-radius:6px; resize:vertical; flex:1; font-size:13px; color:var(--ash); line-height:1.5; min-height: 120px; padding:10px; width:100%; }
+
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  button.chip{ padding:6px 12px; font-size:11px; background:var(--void); border:1px solid var(--hairline); color:var(--ash); border-radius:4px; cursor:pointer; font-family:'Rajdhani',sans-serif; text-transform:uppercase; }
+  button.chip:hover{ border-color:var(--mist); }
+
+  .log-list{ list-style:none; margin:0; padding:0; max-height:240px; overflow-y:auto; border-top:1px solid var(--hairline); }
+  .log-list li{ display:flex; gap:12px; align-items:baseline; padding:8px 2px; border-bottom:1px solid var(--hairline); }
+  .log-list__time{ font-family:'Space Mono',monospace; font-size:12px; color:var(--red); min-width:85px; }
+  .log-list__note{ flex:1; font-size:13px; }
+  .log-list__del{ background:transparent; border:none; color:var(--mist); cursor:pointer; }
+  .log-list__del:hover{ color:var(--red); }
+  
+  footer{ text-align:center; font-size:12px; color:var(--mist); margin-top:20px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="app__header">
+    <h1>Creator Command Center & Stream Desk</h1>
+    <p>Unified planning matrices, stream control timers, and instant zero-config Twitch username sync.</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="tabs">
+      <button class="tab" data-view="blueprint" data-active="true">Weekly Blueprint</button>
+      <button class="tab" data-view="release">Content Schedule</button>
+      <button class="tab" data-view="controldesk">Stream Control Desk</button>
+    </div>
+
+    <div class="control-group">
+      <span class="control-label">Global Font</span>
+      <select id="globalFontSelect">
+        <option value="'Inter', sans-serif">Inter</option>
+        <option value="'Rajdhani', sans-serif">Rajdhani</option>
+        <option value="'Space Mono', monospace">Space Mono</option>
+        <option value="'Plus Jakarta Sans', sans-serif">Jakarta Sans</option>
+        <option value="'JetBrains Mono', monospace">JetBrains</option>
+        <option value="'Orbitron', sans-serif">Orbitron</option>
+        <option value="'Cinzel', serif">Cinzel</option>
+        <option value="'Teko', sans-serif">Teko</option>
+      </select>
+      <select id="globalSizeSelect">
+        <option value="9px">9px</option>
+        <option value="10px">10px</option>
+        <option value="11px" selected>11.5px</option>
+        <option value="13px">13px</option>
+        <option value="15px">15px</option>
+        <option value="18px">18px</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <span class="control-label">Palette</span>
+      <div class="swatches" id="swatches"></div>
+      <input type="color" id="customColor" value="#e21f2d" aria-label="Custom accent color">
+    </div>
+
+    <div class="spacer"></div>
+    <button class="action-btn ghost" id="resetBtn">Reset Defaults</button>
+    <button class="action-btn" id="exportBtn">Export Active Mat (PNG)</button>
+  </div>
+
+  <div class="view-panel" data-view="blueprint" data-active="true">
+    <div class="mat-scale-wrapper" id="scaleWrapperBP">
+      <div class="mat" id="mat-blueprint" data-matname="creator-weekly-blueprint"></div>
+    </div>
+  </div>
+
+  <div class="view-panel" data-view="release">
+    <div class="mat-scale-wrapper" id="scaleWrapperRel">
+      <div class="mat" id="mat-release" data-matname="video-release-schedule"></div>
+    </div>
+  </div>
+
+  <div class="view-panel" data-view="controldesk">
+    <div class="desk-container">
+      
+      <div class="desk-card" data-card-id="twitch-config">
+        <div class="desk-card__header">
+          <div>
+            <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Twitch Channel Connection</p>
+            <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Just type your channel username—zero developer console setup required</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span id="authStatusBadge" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Not Connected</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <input type="text" id="twitchUsernameInput" placeholder="e.g. davelevelsup" style="width:240px;">
+          <button class="action-btn" id="connectUsernameBtn">Connect Channel</button>
+          <button class="action-btn ghost" id="disconnectUsernameBtn" style="display:none; color:var(--red); border-color:var(--red);">Disconnect</button>
+          <span id="twitchUserDisplay" style="font-family:'Space Mono',monospace; font-size:12px; color:var(--red);"></span>
+        </div>
+      </div>
+
+      <div class="desk-grid" id="topDeskGrid">
+        <div class="desk-card" data-card-id="game-switch">
+          <div class="desk-card__header">
+            <div>
+              <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Game Switch Cue</p>
+              <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Countdown to your next transition</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="card-reorder-controls">
+                <button class="reorder-btn shift-left" title="Move Left">◄</button>
+                <button class="reorder-btn shift-right" title="Move Right">►</button>
+              </div>
+              <span id="gameStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Idle</span>
+            </div>
+          </div>
+          <div class="timer-block">
+            <div class="clockwrap" id="gameClockWrap">
+              <div class="clock-display" id="gameClockDisplay">120:00</div>
+              <div class="clock-label-under" id="gameClockLabelUnder">Switch to next game</div>
+            </div>
+            <div>
+              <label class="small-label" for="timerLabel">Cue Label</label>
+              <input type="text" id="timerLabel" value="Switch to next game" maxlength="60" style="width:100%; max-width:320px;">
+            </div>
+            <div class="field-row">
+              <div>
+                <label class="small-label" for="minInput">Minutes</label>
+                <input type="number" id="minInput" value="120" min="0" max="999" style="width:70px; text-align:center;">
+              </div>
+              <span style="font-family:'Space Mono',monospace; padding-top:16px;">:</span>
+              <div>
+                <label class="small-label" for="secInput">Seconds</label>
+                <input type="number" id="secInput" value="0" min="0" max="59" style="width:70px; text-align:center;">
+              </div>
+            </div>
+            <div class="chip-row">
+              <button class="chip" data-preset="30">30m</button>
+              <button class="chip" data-preset="60">60m</button>
+              <button class="chip" data-preset="90">90m</button>
+              <button class="chip" data-preset="120">120m</button>
+            </div>
+            <div class="chip-row">
+              <button class="action-btn" id="startBtn">Start</button>
+              <button class="action-btn ghost" id="pauseBtn">Pause</button>
+              <button class="action-btn ghost" id="resetTimerBtn">Reset</button>
+              <button class="action-btn" id="dismissAlarmBtn" style="display:none; background:#a239f2; color:#fff;">Dismiss Alarm</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-card" data-card-id="stream-reminder">
+          <div class="sticky-card__header-bar">
+            <input class="sticky-card__title" value="Stream Reminder" maxlength="30">
+            <div class="card-reorder-controls">
+              <button class="reorder-btn shift-left" title="Move Left">◄</button>
+              <button class="reorder-btn shift-right" title="Move Right">►</button>
+            </div>
+          </div>
+          <textarea class="sticky-card__body" id="stickyBody" placeholder="Goals, cues, or reminders for mid-stream..."></textarea>
+        </div>
+      </div>
+
+      <div class="desk-card" data-card-id="stream-stopwatch">
+        <div class="desk-card__header">
+          <div>
+            <p style="font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; margin:0; text-transform:uppercase;">Stream Stopwatch & Live Stats</p>
+            <p style="font-size:12px; color:var(--mist); margin:2px 0 0;">Auto-syncs uptime via public channel lookup • Live viewer counter active</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="font-family:'Rajdhani',sans-serif; font-size:12px; background:var(--void); border:1px solid var(--hairline); border-radius:4px; padding:4px 8px;">
+              Viewers: <span id="liveViewerCount" style="font-family:'Space Mono',monospace; color:var(--red); font-weight:700;">--</span>
+            </div>
+            <span id="streamStatusDot" style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; color:var(--mist);">Off air</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+          <div class="clockwrap" id="streamClockWrap">
+            <div class="clock-display" id="streamClockDisplay">00:00:00</div>
+            <div class="clock-label-under">Elapsed stream time (Username Synced)</div>
+          </div>
+          <div class="chip-row" style="align-items:center;">
+            <button class="action-btn" id="streamStartBtn">Go Live / Force Sync</button>
+            <button class="action-btn ghost" id="streamPauseBtn">Pause</button>
+            <button class="action-btn ghost" id="streamResetBtn">Reset</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:6px 10px;">
+            <label class="small-label" for="manualTimeInput" style="margin:0;">Set Time:</label>
+            <input type="text" id="manualTimeInput" placeholder="00:15:00" style="width:85px; text-align:center;">
+            <button class="action-btn small" id="streamSetTimeBtn">Apply</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+          <span id="logClockBadge" title="Click to sync/insert current time into note input" style="font-family:'Space Mono',monospace; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:9px 12px; color:var(--red); cursor:pointer;">00:00:00 ⟳</span>
+          <input type="text" id="noteInput" placeholder="Add chapter note (elapsed time auto-syncs on click)..." style="flex:1; min-width:220px;">
+          <button class="action-btn" id="logBtn">Add Note</button>
+          <button class="action-btn ghost" id="markBtn">Mark ⏱ (F13+F24)</button>
+        </div>
+
+        <ul class="log-list" id="logList"></ul>
+        <p id="logEmpty" style="color:var(--mist); font-size:13px; text-align:center; padding:12px 0;">No notes or chapter markers logged yet.</p>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="action-btn ghost" id="exportLogBtn">Export Log (.txt)</button>
+          <button class="action-btn ghost" id="clearLogBtn" style="color:var(--red); border-color:var(--red);">Clear Log</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>Unified Creator Toolkit • Zero-config username sync active</footer>
+</div>
+
+<script>
+  const globalFontSelect = document.getElementById('globalFontSelect');
+  const globalSizeSelect = document.getElementById('globalSizeSelect');
+  const stickyBody = document.getElementById('stickyBody');
+  const matBlueprint = document.getElementById('mat-blueprint');
+  const matRelease = document.getElementById('mat-release');
+
+  const blueprintData = {
+    title: "CREATOR WEEKLY BLUEPRINT", meta: "25-HR NON-STREAMING ALLOCATION",
+    columns: [
+      { day:"MONDAY", subtitle:"6 HR STREAM + PRE-PREP", blocks:[
+        {label:"DAYTIME", body:"Stream setup, titles, & community check-ins."},
+        {label:"BLOCK 1", body:"Minecraft Cobblemon / Modded SMP"},
+        {label:"BLOCK 2", body:"Game Demo or Review Key"}
+      ]},
+      { day:"TUESDAY", subtitle:"PROD, EDIT & BACKLOG", blocks:[
+        {label:"BLOCK 1", body:"Video Editing & VOD Pipeline Archiving"},
+        {label:"BLOCK 2", body:"Asset Creation & Collab Planning"}
+      ]},
+      { day:"WEDNESDAY", subtitle:"6 HR STREAM + NARRATIVE", blocks:[
+        {label:"DAYTIME", body:"Mid-week review & stream board prep."},
+        {label:"BLOCK 1", body:"Narrative RPG Campaign"}
+      ]},
+      { day:"THURSDAY", subtitle:"CREATIVE WRITING & DEV", blocks:[
+        {label:"BLOCK 1", body:"TTRPG System Design & Expansion Modules"}
+      ]},
+      { day:"FRIDAY", subtitle:"GAME GREMLINS LIVE", blocks:[
+        {label:"START 7PM", body:"Podcast & Community Multiplayer"}
+      ]},
+      { day:"SATURDAY", subtitle:"REST & RECOVERY", blocks:[
+        {label:"OFF-AIR", body:"Completely offline."}
+      ]},
+      { day:"SUNDAY", subtitle:"THE FUCTORY TOUR", blocks:[
+        {label:"START 7PM", body:"Community multiplayer session."}
+      ]}
+    ]
+  };
+
+  const releaseData = {
+    title: "CONTENT SCHEDULE", meta: "VIDEO RELEASE LINEUP",
+    columns: [
+      { day:"MONDAY", subtitle:"NO RELEASE", blocks:[{label:"STATUS", body:"Editing continues."}]},
+      { day:"TUESDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Monday Stream VOD."}]},
+      { day:"WEDNESDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Sunday Tour VOD."}]},
+      { day:"THURSDAY", subtitle:"NO RELEASE", blocks:[{label:"STATUS", body:"Writing day."}]},
+      { day:"FRIDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Wednesday Edit."}]},
+      { day:"SATURDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Bonus Feature."}]},
+      { day:"SUNDAY", subtitle:"VIDEO RELEASE", blocks:[{label:"RELEASES", body:"Special Release."}]}
+    ]
+  };
+
+  function esc(str){
+    return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function blockHtml(b){
+    const hasImg = !!b.img;
+    return `
+      <div class="block">
+        <button class="block__remove" title="Remove box">✕</button>
+        <div class="block__label" contenteditable="true" spellcheck="false">${esc(b.label)}</div>
+        <div class="block__imgwrap" data-has="${hasImg}">
+          <img class="block__img" alt="" src="${hasImg ? b.img : ''}">
+          <button class="block__imgremove" title="Remove image">✕</button>
+        </div>
+        <div class="block__body" contenteditable="true" spellcheck="false">${esc(b.body)}</div>
+        <button class="block__addimg">+ Add Image</button>
+      </div>
+    `;
+  }
+
+  function renderMat(container, data){
+    const colsHtml = data.columns.map(col => `
+      <div class="daycol">
+        <div class="daycol__day" contenteditable="true" spellcheck="false">${esc(col.day)}</div>
+        <div class="daycol__subtitle" contenteditable="true" spellcheck="false">${esc(col.subtitle)}</div>
+        <div class="daycol__blocks">${col.blocks.map(blockHtml).join('')}</div>
+        <button class="daycol__addbtn">+ Add Box</button>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="corner corner--tl"></div><div class="corner corner--tr"></div>
+      <div class="corner corner--bl"></div><div class="corner corner--br"></div>
+      <div class="top-tab"></div>
+      <div class="top-tab__line top-tab__line--l"></div><div class="top-tab__line top-tab__line--r"></div>
+      <div class="mat__header">
+        <div class="badge">
+          <svg width="28" height="28" viewBox="0 0 24 24" stroke="var(--red)" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M12 20V6M12 6l-5 5M12 6l5 5"/></svg>
+        </div>
+        <div class="mat-meta" contenteditable="true" spellcheck="false">${esc(data.meta)}</div>
+        <h2 class="mat-title" contenteditable="true" spellcheck="false">${esc(data.title)}</h2>
+      </div>
+      <div class="matgrid">${colsHtml}</div>
+    `;
+    applyGlobalTypography();
+  }
+
+  renderMat(matBlueprint, blueprintData);
+  renderMat(matRelease, releaseData);
+
+  function applyGlobalTypography(){
+    if (!globalFontSelect || !globalSizeSelect || !stickyBody) return;
+    const font = globalFontSelect.value;
+    const size = globalSizeSelect.value;
+    
+    document.querySelectorAll('.block__body').forEach(el => {
+      el.style.fontFamily = font;
+      el.style.fontSize = size;
+    });
+    stickyBody.style.fontFamily = font;
+    stickyBody.style.fontSize = size;
+    scheduleSave();
+  }
+
+  globalFontSelect.addEventListener('change', applyGlobalTypography);
+  globalSizeSelect.addEventListener('change', applyGlobalTypography);
+
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.view-panel');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.dataset.active = 'false');
+      tab.dataset.active = 'true';
+      const target = tab.dataset.view;
+      panels.forEach(p => p.dataset.active = (p.dataset.view === target) ? 'true' : 'false');
+      fitScales();
+    });
+  });
+
+  function fitScales(){
+    ['BP', 'Rel'].forEach(s => {
+      const wrapper = document.getElementById('scaleWrapper' + s);
+      if (!wrapper || wrapper.clientWidth === 0) return;
+      const mat = wrapper.querySelector('.mat');
+      if (!mat) return;
+      const scale = Math.min(1, wrapper.clientWidth / 1600);
+      mat.style.transform = `scale(${scale})`;
+      wrapper.style.height = (900 * scale) + 'px';
+    });
+  }
+  window.addEventListener('resize', fitScales);
+  window.addEventListener('load', fitScales);
+  setTimeout(fitScales, 50);
+
+  // Safe Top Grid Card Reordering
+  document.querySelectorAll('#topDeskGrid .shift-left').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('.desk-card, .sticky-card');
+      const parent = card.parentElement;
+      if (card.previousElementSibling) {
+        parent.insertBefore(card, card.previousElementSibling);
+        scheduleSave();
+      }
+    });
+  });
+
+  document.querySelectorAll('#topDeskGrid .shift-right').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('.desk-card, .sticky-card');
+      const parent = card.parentElement;
+      if (card.nextElementSibling) {
+        parent.insertBefore(card.nextElementSibling, card);
+        scheduleSave();
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('block__remove')){
+      e.target.closest('.block').remove();
+      scheduleSave();
+    } else if (e.target.classList.contains('daycol__addbtn')){
+      const blocksWrap = e.target.previousElementSibling;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = blockHtml({ label: 'NEW BLOCK', body: 'Click to edit content' });
+      blocksWrap.appendChild(wrap.firstElementChild);
+      applyGlobalTypography();
+      scheduleSave();
+    } else if (e.target.classList.contains('block__addimg')){
+      const block = e.target.closest('.block');
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*';
+      input.addEventListener('change', () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          block.querySelector('.block__img').src = ev.target.result;
+          block.querySelector('.block__imgwrap').dataset.has = 'true';
+          scheduleSave();
+        };
+        reader.readAsDataURL(file);
+      });
+      input.click();
+    } else if (e.target.classList.contains('block__imgremove')){
+      const block = e.target.closest('.block');
+      block.querySelector('.block__img').src = '';
+      block.querySelector('.block__imgwrap').dataset.has = 'false';
+      scheduleSave();
+    }
+  });
+
+  document.addEventListener('input', scheduleSave);
+
+  const PRESETS = [
+    { name:'Crimson', hex:'#e21f2d' }, { name:'Cyan', hex:'#1fd0e2' },
+    { name:'Violet', hex:'#a239f2' }, { name:'Amber', hex:'#f2a71f' },
+    { name:'Emerald', hex:'#1fe27a' }, { name:'Mono', hex:'#d8d5da' }
+  ];
+  const swatchesEl = document.getElementById('swatches');
+  const customColorEl = document.getElementById('customColor');
+
+  function applyPalette(hex, fromSwatch){
+    hex = hex || '#e21f2d';
+    const num = parseInt(hex.replace('#',''), 16);
+    const r = (num>>16)&255, g = (num>>8)&255, b = num&255;
+    const root = document.documentElement.style;
+    root.setProperty('--red', hex);
+    root.setProperty('--red-fill', `rgba(${r},${g},${b},0.18)`);
+    root.setProperty('--hairline', `rgba(${r},${g},${b},0.45)`);
+    root.setProperty('--glow', `rgba(${r},${g},${b},0.45)`);
+    customColorEl.value = hex;
+    document.querySelectorAll('.swatch').forEach(s => {
+      s.dataset.active = (fromSwatch && s.dataset.hex === hex) ? 'true' : 'false';
+    });
+    scheduleSave();
+  }
+
+  PRESETS.forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'swatch'; btn.style.background = p.hex; btn.dataset.hex = p.hex;
+    btn.addEventListener('click', () => applyPalette(p.hex, true));
+    swatchesEl.appendChild(btn);
+  });
+  customColorEl.addEventListener('input', (e) => applyPalette(e.target.value, false));
+
+  let currentUsername = localStorage.getItem('twitch_username') || '';
+  let channelPollInterval = null;
+
+  const usernameInput = document.getElementById('twitchUsernameInput');
+  const connectBtn = document.getElementById('connectUsernameBtn');
+  const disconnectBtn = document.getElementById('disconnectUsernameBtn');
+  const authStatusBadge = document.getElementById('authStatusBadge');
+  const userDisplay = document.getElementById('twitchUserDisplay');
+  const liveViewerCountEl = document.getElementById('liveViewerCount');
+
+  if (currentUsername) usernameInput.value = currentUsername;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (currentUsername) {
+      updateUsernameUI();
+      startChannelPolling();
+    }
+  });
+
+  connectBtn.addEventListener('click', () => {
+    const uname = usernameInput.value.trim().toLowerCase();
+    if (!uname) return alert('Please enter your Twitch username.');
+    currentUsername = uname;
+    localStorage.setItem('twitch_username', currentUsername);
+    updateUsernameUI();
+    startChannelPolling();
+  });
+
+  disconnectBtn.addEventListener('click', () => {
+    currentUsername = '';
+    localStorage.removeItem('twitch_username');
+    if (channelPollInterval) clearInterval(channelPollInterval);
+    liveViewerCountEl.textContent = '--';
+    updateUsernameUI();
+  });
+
+  function updateUsernameUI() {
+    if (currentUsername) {
+      authStatusBadge.textContent = 'Connected';
+      authStatusBadge.style.color = 'var(--red)';
+      userDisplay.textContent = `@${currentUsername}`;
+      connectBtn.style.display = 'none';
+      usernameInput.style.display = 'none';
+      disconnectBtn.style.display = 'inline-block';
+    } else {
+      authStatusBadge.textContent = 'Not Connected';
+      authStatusBadge.style.color = 'var(--mist)';
+      userDisplay.textContent = '';
+      connectBtn.style.display = 'inline-block';
+      usernameInput.style.display = 'inline-block';
+      disconnectBtn.style.display = 'none';
+    }
+  }
+
+  function startChannelPolling() {
+    if (channelPollInterval) clearInterval(channelPollInterval);
+    pollChannelData();
+    channelPollInterval = setInterval(pollChannelData, 30000);
+  }
+
+  async function pollChannelData() {
+    if (!currentUsername) return;
+    try {
+      const viewerRes = await fetch(`https://decapi.me/twitch/viewers/${currentUsername}`);
+      if (viewerRes.ok) {
+        const text = await viewerRes.text();
+        if (!text.includes('no response') && !text.includes('offline')) {
+          liveViewerCountEl.textContent = text;
+        } else {
+          liveViewerCountEl.textContent = 'Offline';
+        }
+      }
+
+      const uptimeRes = await fetch(`https://decapi.me/twitch/uptime/${currentUsername}`);
+      if (uptimeRes.ok) {
+        const uptimeText = await uptimeRes.text();
+        if (uptimeText && !uptimeText.includes('offline') && !uptimeText.includes('is offline')) {
+          document.getElementById('streamStatusDot').textContent = 'On Air';
+        } else {
+          document.getElementById('streamStatusDot').textContent = 'Off Air';
+        }
+      }
+    } catch (e) {
+      console.error('Channel poll error:', e);
+    }
+  }
+
+  let activeAlarmInterval = null;
+
+  function playBeep(type = 'warning') {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      if (type === 'alarm') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(1760, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+
+        if (!activeAlarmInterval) {
+          activeAlarmInterval = setInterval(() => playBeep('alarm'), 600);
+          document.getElementById('dismissAlarmBtn').style.display = 'inline-block';
+        }
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+    } catch(e) {}
+  }
+
+  function dismissAlarm() {
+    if (activeAlarmInterval) {
+      clearInterval(activeAlarmInterval);
+      activeAlarmInterval = null;
+    }
+    document.getElementById('dismissAlarmBtn').style.display = 'none';
+  }
+
+  document.getElementById('dismissAlarmBtn').addEventListener('click', dismissAlarm);
+
+  let gameDuration = 7200, gameElapsed = 0, gameStart = null, gameTimer = null, gameRunning = false, lastBeepTriggered = null;
+  const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  const fmtLong = s => {
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  };
+
+  function renderGameClock(){
+    const currentElapsed = gameRunning && gameStart ? gameElapsed + Math.floor((Date.now() - gameStart)/1000) : gameElapsed;
+    const rem = Math.max(gameDuration - currentElapsed, 0);
+    document.getElementById('gameClockDisplay').textContent = fmt(rem);
+    const state = rem <= 0 ? 'live' : (gameRunning ? 'running' : 'idle');
+    document.getElementById('gameClockWrap').dataset.state = state;
+    document.getElementById('gameStatusDot').textContent = state === 'live' ? 'Switch Now' : state;
+
+    if (gameRunning) {
+      if (rem === 300 && lastBeepTriggered !== 300) {
+        playBeep('warning');
+        lastBeepTriggered = 300;
+      }
+      if (rem === 0 && lastBeepTriggered !== 0) {
+        playBeep('alarm');
+        lastBeepTriggered = 0;
+        gameRunning = false; 
+        clearInterval(gameTimer);
+      }
+    }
+  }
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    if(gameRunning) return;
+    dismissAlarm();
+    gameRunning = true; gameStart = Date.now();
+    gameTimer = setInterval(renderGameClock, 250);
+  });
+  document.getElementById('pauseBtn').addEventListener('click', () => {
+    if(gameRunning) gameElapsed += Math.floor((Date.now() - gameStart)/1000);
+    gameRunning = false; clearInterval(gameTimer); renderGameClock();
+  });
+  document.getElementById('resetTimerBtn').addEventListener('click', () => {
+    dismissAlarm();
+    gameRunning = false; clearInterval(gameTimer); gameElapsed = 0; lastBeepTriggered = null;
+    const m = parseInt(document.getElementById('minInput').value || 0);
+    const s = parseInt(document.getElementById('secInput').value || 0);
+    gameDuration = m * 60 + s; renderGameClock();
+  });
+
+  document.querySelectorAll('.timer-block .chip[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      dismissAlarm();
+      const mins = parseInt(btn.dataset.preset);
+      document.getElementById('minInput').value = mins;
+      document.getElementById('secInput').value = 0;
+      gameRunning = false; clearInterval(gameTimer); gameElapsed = 0; lastBeepTriggered = null;
+      gameDuration = mins * 60;
+      renderGameClock();
+    });
+  });
+
+  let streamElapsed = 0, streamStart = null, streamTimer = null, streamRunning = false, entries = [];
+  function renderStreamClock(){
+    const cur = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
+    const tStr = fmtLong(cur);
+    document.getElementById('streamClockDisplay').textContent = tStr;
+    document.getElementById('logClockBadge').textContent = tStr + ' ⟳';
+  }
+
+  document.getElementById('streamStartBtn').addEventListener('click', () => {
+    if (currentUsername) pollChannelData();
+    if(!streamRunning) {
+      streamRunning = true; 
+      streamStart = Date.now() - (streamElapsed * 1000);
+      if(!streamTimer) streamTimer = setInterval(renderStreamClock, 250);
+    }
+  });
+  document.getElementById('streamPauseBtn').addEventListener('click', () => {
+    if(streamRunning) streamElapsed += Math.floor((Date.now() - streamStart)/1000);
+    streamRunning = false; clearInterval(streamTimer); streamTimer = null; renderStreamClock();
+  });
+  document.getElementById('streamResetBtn').addEventListener('click', () => {
+    if(confirm('Reset stream stopwatch?')){
+      streamRunning = false; clearInterval(streamTimer); streamTimer = null; streamElapsed = 0; renderStreamClock();
+    }
+  });
+
+  function parseTimeToSeconds(str) {
+    str = (str || '').trim();
+    const parts = str.split(':').map(p => parseInt(p, 10));
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2 && !parts.some(isNaN)) {
+      return parts[0] * 60 + parts[1];
+    } else {
+      const num = parseInt(str, 10);
+      return isNaN(num) ? 0 : num * 60;
+    }
+  }
+
+  document.getElementById('streamSetTimeBtn').addEventListener('click', () => {
+    const val = document.getElementById('manualTimeInput').value;
+    const totalSecs = parseTimeToSeconds(val);
+    streamElapsed = Math.max(0, totalSecs);
+    if (streamRunning) {
+      streamStart = Date.now();
+    }
+    renderStreamClock();
+    document.getElementById('manualTimeInput').value = '';
+  });
+
+  document.getElementById('logClockBadge').addEventListener('click', () => {
+    const cur = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
+    const tStr = fmtLong(cur);
+    const noteInput = document.getElementById('noteInput');
+    noteInput.value = `[${tStr}] ` + noteInput.value;
+    noteInput.focus();
+  });
+
+  function addLogNote(text){
+    const cur = (streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed);
+    entries.push({ time: fmtLong(cur), note: text ? esc(text) : '<em>Timestamp marker</em>' });
+    renderLog();
+  }
+  function renderLog(){
+    const list = document.getElementById('logList');
+    list.innerHTML = entries.map((e, i) => `<li><span class="log-list__time">${e.time}</span><span class="log-list__note">${e.note}</span><button class="log-list__del" onclick="entries.splice(${i},1);renderLog()">✕</button></li>`).join('');
+    document.getElementById('logEmpty').style.display = entries.length ? 'none' : 'block';
+  }
+  document.getElementById('logBtn').addEventListener('click', () => { const inp = document.getElementById('noteInput'); addLogNote(inp.value); inp.value=''; });
+  document.getElementById('markBtn').addEventListener('click', () => addLogNote(''));
+  document.getElementById('clearLogBtn').addEventListener('click', () => { entries = []; renderLog(); });
+  document.getElementById('exportLogBtn').addEventListener('click', () => {
+    if(!entries.length) return alert('No notes to export.');
+    const text = entries.map(e => `[${e.time}] ${e.note.replace(/<[^>]*>/g,'')}`).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+    a.download = 'stream-session-log.txt'; a.click();
+  });
+
+  const pressedKeys = {};
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F13' || e.code === 'F13') pressedKeys['F13'] = true;
+    if (e.key === 'F24' || e.code === 'F24') pressedKeys['F24'] = true;
+    
+    if (pressedKeys['F13'] && pressedKeys['F24']) {
+      e.preventDefault();
+      addLogNote('');
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'F13' || e.code === 'F13') pressedKeys['F13'] = false;
+    if (e.key === 'F24' || e.code === 'F24') pressedKeys['F24'] = false;
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    const activeTab = document.querySelector('.tab[data-active="true"]').dataset.view;
+    if(activeTab === 'controldesk') return alert('Switch to Weekly Blueprint or Content Schedule to export as a mat PNG.');
+    const mat = activeTab === 'blueprint' ? matBlueprint : matRelease;
+    const prevTransform = mat.style.transform;
+    mat.style.transform = 'none';
+    mat.classList.add('is-exporting');
+
+    await document.fonts.ready;
+    await new Promise(r => requestAnimationFrame(r));
+    try{
+      const canvas = await html2canvas(mat, { backgroundColor:'#0a0a0c', scale:1.2, useCORS:true });
+      const a = document.createElement('a'); a.download = mat.dataset.matname + '.png';
+      a.href = canvas.toDataURL('image/png'); a.click();
+    }catch(e){ alert('Export failed: ' + e.message); }
+    finally{ 
+      mat.classList.remove('is-exporting');
+      mat.style.transform = prevTransform; 
+      fitScales(); 
+    }
+  });
+
+  function serializeMat(container){
+    return {
+      title: container.querySelector('.mat-title').innerText.trim(),
+      meta: container.querySelector('.mat-meta').innerText.trim(),
+      columns: [...container.querySelectorAll('.daycol')].map(col => ({
+        day: col.querySelector('.daycol__day').innerText.trim(),
+        subtitle: col.querySelector('.daycol__subtitle').innerText.trim(),
+        blocks: [...col.querySelectorAll('.block')].map(b => ({
+          label: b.querySelector('.block__label').innerText.trim(),
+          body: b.querySelector('.block__body').innerText.trim(),
+          img: b.querySelector('.block__imgwrap').dataset.has === 'true' ? b.querySelector('.block__img').src : null
+        }))
+      }))
+    };
+  }
+
+  function scheduleSave(){
+    try{
+      localStorage.setItem('ccc-bp', JSON.stringify(serializeMat(matBlueprint)));
+      localStorage.setItem('ccc-rel', JSON.stringify(serializeMat(matRelease)));
+      localStorage.setItem('ccc-palette', document.documentElement.style.getPropertyValue('--red'));
+      localStorage.setItem('ccc-global-font', globalFontSelect.value);
+      localStorage.setItem('ccc-global-size', globalSizeSelect.value);
+      localStorage.setItem('ccc-sticky-title', document.querySelector('.sticky-card__title').value);
+      localStorage.setItem('ccc-sticky-text', stickyBody.value);
+
+      const topOrder = [...document.querySelectorAll('#topDeskGrid .desk-card, #topDeskGrid .sticky-card')].map(c => c.dataset.cardId);
+      localStorage.setItem('ccc-top-order', JSON.stringify(topOrder));
+    }catch(e){}
+  }
+
+  function loadAll(){
+    try{
+      const bp = JSON.parse(localStorage.getItem('ccc-bp'));
+      const rel = JSON.parse(localStorage.getItem('ccc-rel'));
+      if(bp) renderMat(matBlueprint, bp);
+      if(rel) renderMat(matRelease, rel);
+      applyPalette(localStorage.getItem('ccc-palette'), true);
+      
+      const gFont = localStorage.getItem('ccc-global-font');
+      const gSize = localStorage.getItem('ccc-global-size');
+      const sTitle = localStorage.getItem('ccc-sticky-title');
+      const sText = localStorage.getItem('ccc-sticky-text');
+      if(gFont) globalFontSelect.value = gFont;
+      if(gSize) globalSizeSelect.value = gSize;
+      applyGlobalTypography();
+
+      if(sTitle) document.querySelector('.sticky-card__title').value = sTitle;
+      if(sText) stickyBody.value = sText;
+
+      const topOrder = JSON.parse(localStorage.getItem('ccc-top-order'));
+      if (topOrder) {
+        const grid = document.getElementById('topDeskGrid');
+        topOrder.forEach(id => {
+          const card = grid.querySelector(`[data-card-id="${id}"]`);
+          if (card) grid.appendChild(card);
+        });
+      }
+    }catch(e){}
+    fitScales();
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('Reset all content, notes, and palettes to default?')){
+      localStorage.clear();
+      renderMat(matBlueprint, blueprintData);
+      renderMat(matRelease, releaseData);
+      applyPalette('#e21f2d', true);
+      globalFontSelect.selectedIndex = 0; globalSizeSelect.selectedIndex = 2;
+      applyGlobalTypography();
+      stickyBody.value = "";
+      fitScales();
+    }
+  });
+
+  loadAll();
+</script>
+</body>
+</html>
