@@ -33,10 +33,9 @@
   .app__header{ margin-bottom:16px; }
   .app__header h1{
     font-family:'Rajdhani',sans-serif; font-weight:700; font-size:22px;
-    margin:0; letter-spacing:.02em;
+    margin:0 0 4px; letter-spacing:.02em;
   }
 
-  /* ---------- Toolbar & Controls ---------- */
   .toolbar{
     display:flex; align-items:center; gap:14px; flex-wrap:wrap;
     margin-bottom:18px; background:var(--panel); padding:12px 16px;
@@ -77,11 +76,9 @@
   .action-btn.ghost{ background:transparent; color:var(--mist); border-color:#2c2c31; }
   .action-btn.small { padding:4px 8px; font-size:11px; }
 
-  /* ---------- Workspace views ---------- */
   .view-panel{ display:none; }
   .view-panel[data-active="true"]{ display:block; }
 
-  /* ---------- Planning Mat Styling (16:9 Scaled) ---------- */
   .mat-scale-wrapper{ position:relative; width:100%; overflow:hidden; min-height: 450px; }
   .mat{
     width:1600px; height:900px;
@@ -192,7 +189,6 @@
   }
   .daycol__addbtn:hover{ color:var(--red); border-color:var(--red); }
 
-  /* ---------- Stream Control Desk Layout ---------- */
   .desk-container { display:flex; flex-direction:column; gap:16px; margin-top:10px; }
   .desk-grid { 
     column-count: 2;
@@ -263,8 +259,6 @@
   .log-list__note{ flex:1; font-size:13px; }
   .log-list__del{ background:transparent; border:none; color:var(--mist); cursor:pointer; }
   .log-list__del:hover{ color:var(--red); }
-  
-  footer{ text-align:center; font-size:12px; color:var(--mist); margin-top:20px; }
 </style>
 </head>
 <body>
@@ -327,7 +321,6 @@
 
   <div class="view-panel" data-view="controldesk">
     <div class="desk-container">
-      
       <div class="desk-grid" id="unifiedDeskGrid">
         
         <div class="desk-card" data-card-id="game-switch">
@@ -409,6 +402,7 @@
           <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
             <div class="clockwrap" id="streamClockWrap">
               <div class="clock-display" id="streamClockDisplay">00:00:00</div>
+              <div class="clock-label-under">Elapsed stream time</div>
             </div>
             <div class="chip-row" style="align-items:center;">
               <button class="action-btn" id="streamStartBtn">Go Live / Resume</button>
@@ -426,7 +420,7 @@
             <span id="logClockBadge" title="Click to sync/insert current time into note input" style="font-family:'Space Mono',monospace; background:var(--void); border:1px solid var(--hairline); border-radius:6px; padding:9px 12px; color:var(--red); cursor:pointer;">00:00:00 ⟳</span>
             <input type="text" id="noteInput" placeholder="Add chapter note..." style="flex:1; min-width:220px;">
             <button class="action-btn" id="logBtn">Add Note</button>
-            <button class="action-btn ghost" id="markBtn">Mark ⏱</button>
+            <button class="action-btn ghost" id="markBtn">Mark ⏱ (F13+F24)</button>
           </div>
 
           <ul class="log-list" id="logList"></ul>
@@ -441,8 +435,6 @@
       </div>
     </div>
   </div>
-
-  <footer>Unified Creator Toolkit • Local persistence active</footer>
 </div>
 
 <script>
@@ -557,6 +549,7 @@
     });
     stickyBody.style.fontFamily = font;
     stickyBody.style.fontSize = size;
+    scheduleSave();
   }
 
   globalFontSelect.addEventListener('change', applyGlobalTypography);
@@ -589,13 +582,13 @@
   window.addEventListener('load', fitScales);
   setTimeout(fitScales, 50);
 
-  // Multi-column Desk Card Reordering & Size Toggle
   document.querySelectorAll('#unifiedDeskGrid .shift-left').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const card = e.target.closest('.desk-card, .sticky-card');
       const parent = card.parentElement;
       if (card.previousElementSibling) {
         parent.insertBefore(card, card.previousElementSibling);
+        scheduleSave();
       }
     });
   });
@@ -606,6 +599,7 @@
       const parent = card.parentElement;
       if (card.nextElementSibling) {
         parent.insertBefore(card.nextElementSibling, card);
+        scheduleSave();
       }
     });
   });
@@ -614,8 +608,421 @@
     btn.addEventListener('click', (e) => {
       const card = e.target.closest('.desk-card, .sticky-card');
       card.classList.toggle('span-full');
+      scheduleSave();
     });
   });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('block__remove')){
+      e.target.closest('.block').remove();
+      scheduleSave();
+    } else if (e.target.classList.contains('daycol__addbtn')){
+      const blocksWrap = e.target.previousElementSibling;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = blockHtml({ label: 'NEW BLOCK', body: 'Click to edit content' });
+      blocksWrap.appendChild(wrap.firstElementChild);
+      applyGlobalTypography();
+      scheduleSave();
+    } else if (e.target.classList.contains('block__addimg')){
+      const block = e.target.closest('.block');
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*';
+      input.addEventListener('change', () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          block.querySelector('.block__img').src = ev.target.result;
+          block.querySelector('.block__imgwrap').dataset.has = 'true';
+          scheduleSave();
+        };
+        reader.readAsDataURL(file);
+      });
+      input.click();
+    } else if (e.target.classList.contains('block__imgremove')){
+      const block = e.target.closest('.block');
+      block.querySelector('.block__img').src = '';
+      block.querySelector('.block__imgwrap').dataset.has = 'false';
+      scheduleSave();
+    }
+  });
+
+  document.addEventListener('input', scheduleSave);
+
+  const PRESETS = [
+    { name:'Crimson', hex:'#e21f2d' }, { name:'Cyan', hex:'#1fd0e2' },
+    { name:'Violet', hex:'#a239f2' }, { name:'Amber', hex:'#f2a71f' },
+    { name:'Emerald', hex:'#1fe27a' }, { name:'Mono', hex:'#d8d5da' }
+  ];
+  const swatchesEl = document.getElementById('swatches');
+  const customColorEl = document.getElementById('customColor');
+
+  function applyPalette(hex, fromSwatch){
+    hex = hex || '#e21f2d';
+    const num = parseInt(hex.replace('#',''), 16);
+    const r = (num>>16)&255, g = (num>>8)&255, b = num&255;
+    const root = document.documentElement.style;
+    root.setProperty('--red', hex);
+    root.setProperty('--red-fill', `rgba(${r},${g},${b},0.18)`);
+    root.setProperty('--hairline', `rgba(${r},${g},${b},0.45)`);
+    root.setProperty('--glow', `rgba(${r},${g},${b},0.45)`);
+    customColorEl.value = hex;
+    document.querySelectorAll('.swatch').forEach(s => {
+      s.dataset.active = (fromSwatch && s.dataset.hex === hex) ? 'true' : 'false';
+    });
+    scheduleSave();
+  }
+
+  PRESETS.forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'swatch'; btn.style.background = p.hex; btn.dataset.hex = p.hex;
+    btn.addEventListener('click', () => applyPalette(p.hex, true));
+    swatchesEl.appendChild(btn);
+  });
+  customColorEl.addEventListener('input', (e) => applyPalette(e.target.value, false));
+
+  let activeAlarmInterval = null;
+
+  function playBeep(type = 'warning') {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      if (type === 'alarm') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(1760, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+
+        if (!activeAlarmInterval) {
+          activeAlarmInterval = setInterval(() => playBeep('alarm'), 600);
+          document.getElementById('dismissAlarmBtn').style.display = 'inline-block';
+        }
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+    } catch(e) {}
+  }
+
+  function dismissAlarm() {
+    if (activeAlarmInterval) {
+      clearInterval(activeAlarmInterval);
+      activeAlarmInterval = null;
+    }
+    document.getElementById('dismissAlarmBtn').style.display = 'none';
+  }
+
+  document.getElementById('dismissAlarmBtn').addEventListener('click', dismissAlarm);
+
+  let gameDuration = 7200, gameElapsed = 0, gameStart = null, gameTimer = null, gameRunning = false, lastBeepTriggered = null;
+  const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  const fmtLong = s => {
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  };
+
+  function renderGameClock(){
+    const currentElapsed = gameRunning && gameStart ? gameElapsed + Math.floor((Date.now() - gameStart)/1000) : gameElapsed;
+    const rem = Math.max(gameDuration - currentElapsed, 0);
+    document.getElementById('gameClockDisplay').textContent = fmt(rem);
+    const state = rem <= 0 ? 'live' : (gameRunning ? 'running' : 'idle');
+    document.getElementById('gameClockWrap').dataset.state = state;
+    document.getElementById('gameStatusDot').textContent = state === 'live' ? 'Switch Now' : state;
+
+    if (gameRunning) {
+      if (rem === 300 && lastBeepTriggered !== 300) {
+        playBeep('warning');
+        lastBeepTriggered = 300;
+      }
+      if (rem === 0 && lastBeepTriggered !== 0) {
+        playBeep('alarm');
+        lastBeepTriggered = 0;
+        gameRunning = false; 
+        clearInterval(gameTimer);
+      }
+    }
+  }
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    if(gameRunning) return;
+    dismissAlarm();
+    gameRunning = true; gameStart = Date.now();
+    gameTimer = setInterval(renderGameClock, 250);
+  });
+  document.getElementById('pauseBtn').addEventListener('click', () => {
+    if(gameRunning) gameElapsed += Math.floor((Date.now() - gameStart)/1000);
+    gameRunning = false; clearInterval(gameTimer); renderGameClock();
+  });
+  document.getElementById('resetTimerBtn').addEventListener('click', () => {
+    dismissAlarm();
+    gameRunning = false; clearInterval(gameTimer); gameElapsed = 0; lastBeepTriggered = null;
+    const m = parseInt(document.getElementById('minInput').value || 0);
+    const s = parseInt(document.getElementById('secInput').value || 0);
+    gameDuration = m * 60 + s; renderGameClock();
+  });
+
+  document.querySelectorAll('.timer-block .chip[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      dismissAlarm();
+      const mins = parseInt(btn.dataset.preset);
+      document.getElementById('minInput').value = mins;
+      document.getElementById('secInput').value = 0;
+      gameRunning = false; clearInterval(gameTimer); gameElapsed = 0; lastBeepTriggered = null;
+      gameDuration = mins * 60;
+      renderGameClock();
+    });
+  });
+
+  let streamElapsed = 0, streamStart = null, streamTimer = null, streamRunning = false, entries = [];
+  function renderStreamClock(){
+    const cur = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
+    const tStr = fmtLong(cur);
+    document.getElementById('streamClockDisplay').textContent = tStr;
+    document.getElementById('logClockBadge').textContent = tStr + ' ⟳';
+  }
+
+  document.getElementById('streamStartBtn').addEventListener('click', () => {
+    if(!streamRunning) {
+      streamRunning = true; 
+      streamStart = Date.now() - (streamElapsed * 1000);
+      if(!streamTimer) streamTimer = setInterval(renderStreamClock, 250);
+      scheduleSave();
+    }
+  });
+  document.getElementById('streamPauseBtn').addEventListener('click', () => {
+    if(streamRunning) streamElapsed += Math.floor((Date.now() - streamStart)/1000);
+    streamRunning = false; clearInterval(streamTimer); streamTimer = null; renderStreamClock();
+    scheduleSave();
+  });
+  document.getElementById('streamResetBtn').addEventListener('click', () => {
+    if(confirm('Reset stream stopwatch and logs?')){
+      streamRunning = false; clearInterval(streamTimer); streamTimer = null; streamElapsed = 0; entries = [];
+      renderLog();
+      renderStreamClock();
+      localStorage.removeItem('ccc-stream-elapsed');
+      localStorage.removeItem('ccc-stream-running');
+      localStorage.removeItem('ccc-stream-logs');
+      scheduleSave();
+    }
+  });
+
+  function parseTimeToSeconds(str) {
+    str = (str || '').trim();
+    const parts = str.split(':').map(p => parseInt(p, 10));
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2 && !parts.some(isNaN)) {
+      return parts[0] * 60 + parts[1];
+    } else {
+      const num = parseInt(str, 10);
+      return isNaN(num) ? 0 : num * 60;
+    }
+  }
+
+  document.getElementById('streamSetTimeBtn').addEventListener('click', () => {
+    const val = document.getElementById('manualTimeInput').value;
+    const totalSecs = parseTimeToSeconds(val);
+    streamElapsed = Math.max(0, totalSecs);
+    if (streamRunning) {
+      streamStart = Date.now();
+    }
+    renderStreamClock();
+    document.getElementById('manualTimeInput').value = '';
+    scheduleSave();
+  });
+
+  document.getElementById('logClockBadge').addEventListener('click', () => {
+    const cur = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
+    const tStr = fmtLong(cur);
+    const noteInput = document.getElementById('noteInput');
+    noteInput.value = `[${tStr}] ` + noteInput.value;
+    noteInput.focus();
+  });
+
+  function addLogNote(text){
+    const cur = (streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed);
+    entries.push({ time: fmtLong(cur), note: text ? esc(text) : '<em>Timestamp marker</em>' });
+    renderLog();
+    scheduleSave();
+  }
+  function renderLog(){
+    const list = document.getElementById('logList');
+    list.innerHTML = entries.map((e, i) => `<li><span class="log-list__time">${e.time}</span><span class="log-list__note">${e.note}</span><button class="log-list__del" onclick="entries.splice(${i},1);renderLog();scheduleSave();">✕</button></li>`).join('');
+    document.getElementById('logEmpty').style.display = entries.length ? 'none' : 'block';
+  }
+  document.getElementById('logBtn').addEventListener('click', () => { const inp = document.getElementById('noteInput'); addLogNote(inp.value); inp.value=''; });
+  document.getElementById('markBtn').addEventListener('click', () => addLogNote(''));
+  document.getElementById('clearLogBtn').addEventListener('click', () => { 
+    if(confirm('Clear all log entries?')) {
+      entries = []; 
+      renderLog(); 
+      scheduleSave();
+    }
+  });
+  document.getElementById('exportLogBtn').addEventListener('click', () => {
+    if(!entries.length) return alert('No notes to export.');
+    const text = entries.map(e => `[${e.time}] ${e.note.replace(/<[^>]*>/g,'')}`).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+    a.download = 'stream-session-log.txt'; a.click();
+  });
+
+  const pressedKeys = {};
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F13' || e.code === 'F13') pressedKeys['F13'] = true;
+    if (e.key === 'F24' || e.code === 'F24') pressedKeys['F24'] = true;
+    
+    if (pressedKeys['F13'] && pressedKeys['F24']) {
+      e.preventDefault();
+      addLogNote('');
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'F13' || e.code === 'F13') pressedKeys['F13'] = false;
+    if (e.key === 'F24' || e.code === 'F24') pressedKeys['F24'] = false;
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    const activeTab = document.querySelector('.tab[data-active="true"]').dataset.view;
+    if(activeTab === 'controldesk') return alert('Switch to Weekly Blueprint or Content Schedule to export as a mat PNG.');
+    const mat = activeTab === 'blueprint' ? matBlueprint : matRelease;
+    const prevTransform = mat.style.transform;
+    mat.style.transform = 'none';
+    mat.classList.add('is-exporting');
+
+    await document.fonts.ready;
+    await new Promise(r => requestAnimationFrame(r));
+    try{
+      const canvas = await html2canvas(mat, { backgroundColor:'#0a0a0c', scale:1.2, useCORS:true });
+      const a = document.createElement('a'); a.download = mat.dataset.matname + '.png';
+      a.href = canvas.toDataURL('image/png'); a.click();
+    }catch(e){ alert('Export failed: ' + e.message); }
+    finally{ 
+      mat.classList.remove('is-exporting');
+      mat.style.transform = prevTransform; 
+      fitScales(); 
+    }
+  });
+
+  function serializeMat(container){
+    return {
+      title: container.querySelector('.mat-title').innerText.trim(),
+      meta: container.querySelector('.mat-meta').innerText.trim(),
+      columns: [...container.querySelectorAll('.daycol')].map(col => ({
+        day: col.querySelector('.daycol__day').innerText.trim(),
+        subtitle: col.querySelector('.daycol__subtitle').innerText.trim(),
+        blocks: [...col.querySelectorAll('.block')].map(b => ({
+          label: b.querySelector('.block__label').innerText.trim(),
+          body: b.querySelector('.block__body').innerText.trim(),
+          img: b.querySelector('.block__imgwrap').dataset.has === 'true' ? b.querySelector('.block__img').src : null
+        }))
+      }))
+    };
+  }
+
+  function scheduleSave(){
+    try{
+      localStorage.setItem('ccc-bp', JSON.stringify(serializeMat(matBlueprint)));
+      localStorage.setItem('ccc-rel', JSON.stringify(serializeMat(matRelease)));
+      localStorage.setItem('ccc-palette', document.documentElement.style.getPropertyValue('--red'));
+      localStorage.setItem('ccc-global-font', globalFontSelect.value);
+      localStorage.setItem('ccc-global-size', globalSizeSelect.value);
+      localStorage.setItem('ccc-sticky-title', document.querySelector('.sticky-card__title').value);
+      localStorage.setItem('ccc-sticky-text', stickyBody.value);
+
+      const currentStreamSecs = streamRunning && streamStart ? streamElapsed + Math.floor((Date.now() - streamStart)/1000) : streamElapsed;
+      localStorage.setItem('ccc-stream-elapsed', currentStreamSecs);
+      localStorage.setItem('ccc-stream-running', streamRunning);
+      localStorage.setItem('ccc-stream-logs', JSON.stringify(entries));
+
+      const deskLayout = [...document.querySelectorAll('#unifiedDeskGrid .desk-card, #unifiedDeskGrid .sticky-card')].map(c => ({
+        id: c.dataset.cardId,
+        isFull: c.classList.contains('span-full')
+      }));
+      localStorage.setItem('ccc-desk-layout', JSON.stringify(deskLayout));
+    }catch(e){}
+  }
+
+  function loadAll(){
+    try{
+      const bp = JSON.parse(localStorage.getItem('ccc-bp'));
+      const rel = JSON.parse(localStorage.getItem('ccc-rel'));
+      if(bp) renderMat(matBlueprint, bp);
+      if(rel) renderMat(matRelease, rel);
+      applyPalette(localStorage.getItem('ccc-palette'), true);
+      
+      const gFont = localStorage.getItem('ccc-global-font');
+      const gSize = localStorage.getItem('ccc-global-size');
+      const sTitle = localStorage.getItem('ccc-sticky-title');
+      const sText = localStorage.getItem('ccc-sticky-text');
+      if(gFont) globalFontSelect.value = gFont;
+      if(gSize) globalSizeSelect.value = gSize;
+      applyGlobalTypography();
+
+      if(sTitle) document.querySelector('.sticky-card__title').value = sTitle;
+      if(sText) stickyBody.value = sText;
+
+      const savedElapsed = parseInt(localStorage.getItem('ccc-stream-elapsed'), 10);
+      if (!isNaN(savedElapsed)) {
+        streamElapsed = savedElapsed;
+      }
+      const savedRunning = localStorage.getItem('ccc-stream-running') === 'true';
+      if (savedRunning) {
+        streamRunning = true;
+        streamStart = Date.now();
+        if (!streamTimer) streamTimer = setInterval(renderStreamClock, 250);
+      }
+      const savedLogs = JSON.parse(localStorage.getItem('ccc-stream-logs'));
+      if (Array.isArray(savedLogs)) {
+        entries = savedLogs;
+        renderLog();
+      }
+      renderStreamClock();
+
+      const deskLayout = JSON.parse(localStorage.getItem('ccc-desk-layout'));
+      if (deskLayout) {
+        const grid = document.getElementById('unifiedDeskGrid');
+        deskLayout.forEach(item => {
+          const card = grid.querySelector(`[data-card-id="${item.id}"]`);
+          if (card) {
+            if (item.isFull) card.classList.add('span-full');
+            else card.classList.remove('span-full');
+            grid.appendChild(card);
+          }
+        });
+      }
+    }catch(e){}
+    fitScales();
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('Reset all content, notes, timers, and layout customizations to default?')){
+      localStorage.clear();
+      renderMat(matBlueprint, blueprintData);
+      renderMat(matRelease, releaseData);
+      applyPalette('#e21f2d', true);
+      globalFontSelect.selectedIndex = 0; globalSizeSelect.selectedIndex = 2;
+      applyGlobalTypography();
+      stickyBody.value = "";
+      streamElapsed = 0; streamRunning = false; clearInterval(streamTimer); streamTimer = null; entries = [];
+      renderLog();
+      renderStreamClock();
+      document.querySelectorAll('#unifiedDeskGrid .desk-card, #unifiedDeskGrid .sticky-card').forEach(c => c.classList.remove('span-full'));
+      fitScales();
+    }
+  });
+
+  loadAll();
 </script>
 </body>
 </html>
